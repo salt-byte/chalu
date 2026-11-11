@@ -122,7 +122,7 @@ function ruleLine(id){
 function setNext(){
   const p = G.pack, y = G.L.A.y, b = $('next');
   if(G.phase === 'asking'){ const need = allPending().length, got = Object.keys(G.picks).filter(id => allPending().some(x => x.c.id+x.k === id)).length;
-    b.disabled = got < need; b.textContent = '过完第 '+(y+1)+' 年'; $('dockhint').textContent = got < need ? '两个你都在等你拿主意。' : ''; }
+    b.disabled = got < need; b.textContent = '过完第 '+(y+1)+' 年'; $('dockhint').textContent = got < need ? '还有一处要你拿主意。' : ''; }
   else if(y >= p.years){ b.disabled = false; b.textContent = '走完了'; $('dockhint').textContent = ''; }
   else { b.disabled = false; b.textContent = y === 0 ? '进入第 1 年' : '进入第 '+(y+1)+' 年'; $('dockhint').textContent = ''; }
 }
