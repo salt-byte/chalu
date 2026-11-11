@@ -16,42 +16,39 @@ function status(msg, err){ $('status').textContent = msg; $('status').className 
 
 /* ---------- 标题 ---------- */
 function initTitle(){
-  const P = [BUILTIN, BUILTIN2];
+  const P = PACKS;
   $('presets').innerHTML = P.map((b,i) => '<button data-i="'+i+'"><b>'+esc(b.title)+'</b><span class="small muted">'+esc(b.question)+'</span></button>').join('');
   $('presets').querySelectorAll('button').forEach(b => b.onclick = () => { blip(440,.12); brief(sanitize(P[+b.dataset.i])); });
   $('gen').onclick = generate;
 }
 async function generate(){
-  const q = $('q').value.trim();
-  if(q.length < 8){ status('多写两句：在哪两条路之间犹豫，各自吸引你和让你担心的是什么。', true); return; }
+  const q = $('q').value.trim(), key = $('key').value.trim();
+  if(q.length < 4){ status('写一句你在哪两条路之间犹豫。', true); return; }
+  if(!key){
+    // 和八十亿分之一一样：不调用模型，在内置的岔路里找最接近的
+    const hit = matchPack(q);
+    if(!hit){ status('内置的六个岔路里没有和这句话接近的。下面挑一个最像的，或者在「用自己的密钥」里让模型现场拆。', true); return; }
+    blip(440,.12); brief(sanitize(hit), '你写的是「'+q.slice(0,40)+(q.length>40?'…':'')+'」。最接近的内置岔路是这一个。'); return;
+  }
   blip(440,.12); show('loading');
   try{
-    const key = $('key').value.trim(); let raw;
-    if(key){
-      const res = await fetch('https://api.deepseek.com/chat/completions', {method:'POST', headers:{'content-type':'application/json', authorization:'Bearer '+key},
-        body: JSON.stringify({model:'deepseek-flash', max_tokens:7000, stream:false, response_format:{type:'json_object'}, messages:[{role:'system', content:'你只输出一个合法的 JSON 对象。'}, {role:'user', content: buildPrompt(q)}]})});
-      const data = await res.json().catch(() => ({}));
-      if(!res.ok) throw new Error('DeepSeek 返回 '+res.status+(data.error && data.error.message ? '（'+String(data.error.message).slice(0,50)+'）' : ''));
-      const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
-      const a = text.indexOf('{'), b = text.lastIndexOf('}'); if(a < 0 || b <= a) throw new Error('模型没有按格式回答');
-      raw = JSON.parse(text.slice(a, b+1));
-    } else {
-      const res = await fetch(API + '/api/pack', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({q})});
-      const data = await res.json().catch(() => ({}));
-      if(!res.ok) throw new Error(data.error || ('服务返回 '+res.status));
-      raw = data.pack;
-    }
-    const pack = sanitize(raw);
+    const res = await fetch('https://api.deepseek.com/chat/completions', {method:'POST', headers:{'content-type':'application/json', authorization:'Bearer '+key},
+      body: JSON.stringify({model:'deepseek-flash', max_tokens:7000, stream:false, response_format:{type:'json_object'}, messages:[{role:'system', content:'你只输出一个合法的 JSON 对象。'}, {role:'user', content: buildPrompt(q)}]})});
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error('DeepSeek 返回 '+res.status+(data.error && data.error.message ? '（'+String(data.error.message).slice(0,50)+'）' : ''));
+    const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+    const a = text.indexOf('{'), b = text.lastIndexOf('}'); if(a < 0 || b <= a) throw new Error('模型没有按格式回答');
+    const pack = sanitize(JSON.parse(text.slice(a, b+1)));
     if(pack.refuse){ show('title'); status(pack.refuse, true); return; }
     brief(pack);
   }catch(e){
-    show('title');
-    const m = String(e.message||e); status('这次没拆成功：'+(/Failed to fetch|NetworkError|Load failed/.test(m) ? ($('key').value.trim() ? '浏览器没能连上 DeepSeek，可能是它不允许网页直接调用，或者网络不通' : '这个文件没有连着服务端，要拆自己的难题请在下面填密钥') : m.slice(0,80))+'。可以先走下面现成的。', true);
+    show('title'); const m = String(e.message||e);
+    status('这次没拆成功：'+(/Failed to fetch|NetworkError|Load failed/.test(m) ? '浏览器没能连上 DeepSeek' : m.slice(0,80))+'。可以先走下面现成的。', true);
   }
 }
 
 /* ---------- 出发前 ---------- */
-function brief(pack){
+function brief(pack, note){
   G.pack = pack; G.orig = copyOf(pack);
   const rs = Object.values(pack.rules), n = t => rs.filter(r => r.tier===t).length;
   $('bq').textContent = pack.question; $('bA').textContent = pack.options.A.name; $('bB').textContent = pack.options.B.name;
@@ -60,7 +57,7 @@ function brief(pack){
     '<dt>比什么</dt><dd>'+pack.meters.map(m => esc(m.name)).join('、')+'</dd>'+
     '<dt>规则</dt><dd>'+rs.length+' 条：'+(n('study')+n('stat'))+' 条带论文出处'+(n('unverified')?'，'+n('unverified')+' 条是模型提出、没有核实过的':'')+(n('analogy')?'，'+n('analogy')+' 条是类比':'')+(n('assume')?'，'+n('assume')+' 条是设定':'')+'</dd>'+
     '<dt>途中</dt><dd>'+(pack.choices.length ? '有 '+pack.choices.length+' 处要你自己拿主意' : '没有需要你拿主意的地方，只看事情怎么发生')+'</dd>';
-  $('bcav').textContent = (pack.builtin ? '这个难题是人工查证过的示例。' : '这个难题是模型根据你写的话现场拆的。') + (pack.caveat ? '最可能算错的地方：'+pack.caveat : '');
+  $('bcav').textContent = (note ? note+' ' : '') + (pack.builtin ? '这个难题是人工查证过的示例。' : '这个难题是模型根据你写的话现场拆的。') + (pack.caveat ? '最可能算错的地方：'+pack.caveat : '');
   show('brief');
 }
 

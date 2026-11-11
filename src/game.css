@@ -41,7 +41,7 @@ button:focus-visible,textarea:focus-visible,a:focus-visible,summary:focus-visibl
 }
 .lede{font-size:19px;max-width:30em}
 textarea{font:inherit;line-height:1.7;width:100%;min-height:112px;padding:12px 14px;background:var(--panel);color:var(--ink);border:2px solid var(--ink);border-radius:2px;resize:vertical}
-.presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
 .presets button{text-align:left;font-weight:500;border-color:var(--line);display:flex;flex-direction:column;gap:2px;padding:12px 14px}
 .presets button b{font-family:var(--display);font-size:18px}
 .status{min-height:1.75em;font-size:14.5px}
