@@ -11,7 +11,8 @@ export default {
     if(req.method === 'OPTIONS') return new Response(null, { headers: cors(origin) });
     if(req.method !== 'POST') return reply(405, { error: '只接受 POST' }, origin);
     if(!ALLOW.includes(origin)) return reply(403, { error: '这个转发站只服务《岔路》的网页' }, origin);
-    if(!env.DEEPSEEK_API_KEY) return reply(503, { error: '转发站还没有配置密钥' }, origin);
+    const KEY = String(env.DEEPSEEK_API_KEY || '').trim().replace(/^bearer\s+/i, '').replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').trim();
+    if(!KEY) return reply(503, { error: '转发站还没有配置密钥' }, origin);
     const ip = req.headers.get('cf-connecting-ip') || 'x', now = Date.now(), d = new Date().toISOString().slice(0, 10);
     if(day.d !== d) day = { d, n: 0 };
     if(day.n >= PER_DAY) return reply(429, { error: '今天拆的题已经到上限了，先玩内置的岔路' }, origin);
@@ -22,11 +23,11 @@ export default {
     if(q.length < 4) return reply(400, { error: '难题写得太短了' }, origin);
     try{
       const r = await fetch('https://api.deepseek.com/chat/completions', { method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + env.DEEPSEEK_API_KEY },
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + KEY },
         body: JSON.stringify({ model: env.CHALU_MODEL || 'deepseek-flash', max_tokens: 7000, stream: false, response_format: { type: 'json_object' },
           messages: [{ role: 'system', content: '你只输出一个合法的 JSON 对象。' }, { role: 'user', content: buildPrompt(q) }] }) });
       const data = await r.json();
-      if(!r.ok) return reply(502, { error: 'DeepSeek 返回 ' + r.status }, origin);
+      if(!r.ok) return reply(502, { error: 'DeepSeek 返回 ' + r.status + (r.status === 401 ? '：密钥无效（长度 ' + KEY.length + '，开头 ' + KEY.slice(0, 3) + '）' : '') }, origin);
       const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
       const a = text.indexOf('{'), b = text.lastIndexOf('}');
       if(a < 0 || b <= a) return reply(502, { error: '模型没有按格式回答' }, origin);
