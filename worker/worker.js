@@ -109,19 +109,31 @@ export default {
     let q = ''; try{ q = String((await req.json()).q || '').trim().slice(0, 600); }catch(e){}
     if(q.length < 4) return reply(400, { error: '难题写得太短了' }, origin);
     try{
-      const ask = json => fetch(BASE + '/chat/completions', { method: 'POST',
+      // 流式接收：整段等回答容易超过 100 秒被掐断。方舟的思考型模型先关掉深度思考，拆题用不上，还慢好几倍。
+      const ask = extras => fetch(BASE + '/chat/completions', { method: 'POST',
         headers: { 'content-type': 'application/json', authorization: 'Bearer ' + KEY },
-        body: JSON.stringify(Object.assign({ model: MODEL, max_tokens: 7000, stream: false,
+        body: JSON.stringify(Object.assign({ model: MODEL, max_tokens: 7000, stream: true,
           messages: [{ role: 'system', content: '你只输出一个合法的 JSON 对象。' }, { role: 'user', content: buildPrompt(q) }] },
-          json ? { response_format: { type: 'json_object' } } : {})) });
+          extras ? Object.assign({ response_format: { type: 'json_object' } }, ark && env.CHALU_THINKING !== 'on' ? { thinking: { type: 'disabled' } } : {}) : {})) });
       let r = await ask(true);
-      if(r.status === 400) r = await ask(false);   // 有些模型不认 response_format，去掉再问一次
-      const data = await r.json().catch(() => ({}));
+      if(r.status === 400) r = await ask(false);   // 有些模型不认 response_format 或 thinking，去掉再问一次
       if(!r.ok){
+        const data = await r.json().catch(() => ({}));
         const why = data && data.error && (data.error.message || data.error.code) ? '（' + String(data.error.message || data.error.code).slice(0, 80) + '）' : '';
         return reply(502, { error: WHO + ' 返回 ' + r.status + (r.status === 401 ? '：密钥无效（长度 ' + KEY.length + '，开头 ' + KEY.slice(0, 3) + '）' : why) }, origin);
       }
-      const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      let text = '';
+      const pick = d => { const c = d && d.choices && d.choices[0]; return c ? ((c.delta && c.delta.content) || (c.message && c.message.content) || '') : ''; };
+      if(/event-stream/i.test(r.headers.get('content-type') || '')){
+        const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
+        for(;;){
+          const { done, value } = await rd.read();
+          buf += done ? dec.decode() : dec.decode(value, { stream: true });
+          const lines = buf.split('\n'); buf = done ? '' : lines.pop();
+          for(const ln of lines){ const m = /^data:\s*(.*)$/.exec(ln.trim()); if(!m || m[1] === '[DONE]') continue; try{ text += pick(JSON.parse(m[1])); }catch(e){} }
+          if(done) break;
+        }
+      } else text = pick(await r.json().catch(() => ({})));
       const a = text.indexOf('{'), b = text.lastIndexOf('}');
       if(a < 0 || b <= a) return reply(502, { error: '模型没有按格式回答' }, origin);
       return reply(200, { pack: JSON.parse(text.slice(a, b + 1)) }, origin);
