@@ -1,0 +1,4 @@
+# Cloudflare 从 GitHub 自动部署时读这个文件。名字要和 Cloudflare 后台里的 Worker 名字一致。
+name = "chalu"
+main = "worker/worker.js"
+compatibility_date = "2025-09-01"
