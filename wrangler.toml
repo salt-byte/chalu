@@ -3,3 +3,5 @@ name = "chalu"
 main = "worker/worker.js"
 compatibility_date = "2025-09-01"
 workers_dev = true
+# 部署时保留在 Cloudflare 后台填的变量（比如 CHALU_MODEL），否则每次推送都会被清掉。
+keep_vars = true
