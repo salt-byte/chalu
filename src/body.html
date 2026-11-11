@@ -21,7 +21,9 @@
     </details>
   </div>
   <div class="wrap" style="gap:10px;margin:0;max-width:none">
-    <p class="muted small">六个常见的岔路，每条规则都逐条对过论文。写下你的难题，会帮你找到最接近的那个；也可以直接挑。</p>
+    <p class="muted small" id="combo"></p>
+    <div class="chips" id="pairs"></div>
+    <p class="muted small" style="margin-top:8px">精修过的六个：事件逐句手写，规则逐条对过论文。</p>
     <div class="presets" id="presets"></div>
   </div>
   <p class="small muted" style="max-width:40em">它不预测你会怎样，也不给建议。每件事发生时会写明是哪条规律触发的、这条规律有多可靠，所有概率都是设定并且可以改的。</p>
@@ -35,6 +37,7 @@
 <section class="screen" id="brief"><div class="wrap">
   <p class="muted" id="bq"></p>
   <div class="vs"><h2 class="A" id="bA"></h2><span>与</span><h2 class="B" id="bB"></h2></div>
+  <div id="builder"></div>
   <dl class="facts" id="facts"></dl>
   <p class="small muted" id="bcav"></p>
   <div class="row"><button class="go" id="depart">两条路一起出发</button><button id="back1">换一个难题</button></div>

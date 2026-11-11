@@ -148,3 +148,19 @@ body:not(.no3d) .sheet{margin:0 -20px;padding:22px 20px 0}
 
 body.at-title #stage{opacity:.5}
 #stage{transition:opacity .6s}
+
+/* v1.3 拼装器 */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{font-weight:500;font-size:14px;padding:5px 12px;border-width:1.5px;border-color:var(--line)}
+.chips button.rand{border-color:var(--b);color:var(--b)}
+.builder{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:680px){.builder{grid-template-columns:1fr}}
+.bcol{display:flex;flex-direction:column;gap:10px;border-top:6px solid var(--lc);padding-top:10px}
+.bcol.A{--lc:var(--a)} .bcol.B{--lc:var(--b)}
+.bcol h3{color:var(--lc);font-size:18px}
+.dim{display:grid;grid-template-columns:3.2em 1fr;gap:8px;align-items:start}
+.dim > span{font-size:13px;color:var(--muted);padding-top:5px}
+.dim .opts{display:flex;flex-wrap:wrap;gap:6px}
+.dim .opts button{font-size:13.5px;font-weight:500;padding:3px 10px;border-width:1.5px;border-color:var(--line);color:var(--muted)}
+.dim .opts button[aria-pressed="true"]{border-color:var(--lc);color:var(--night);background:var(--lc)}
+.dim .opts button:hover:not([aria-pressed="true"]){background:transparent;color:var(--ink);border-color:var(--ink)}

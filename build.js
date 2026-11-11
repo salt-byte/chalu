@@ -17,6 +17,7 @@ ${r('body.html')}
 <script src="three.min.js"></script>
 <script>
 ${r('engine.js').split("if(typeof module")[0]}
+${r('compose.js').split("if(typeof module")[0]}
 ${r('prompt.js').replace(/^if\(typeof LIB.*\n/, '').split("if(typeof module")[0]}
 ${r('stage3d.js')}
 ${r('game.js')}

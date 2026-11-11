@@ -32,7 +32,7 @@ function sanitize(raw){
   if(!raw || typeof raw!=='object') throw new Error('没有拿到岔路包');
   if(raw.refuse) return {refuse: String(raw.refuse).slice(0,300)};
   const S = (v,n)=>String(v==null?'':v).slice(0,n||200);
-  const pack = {title:S(raw.title,40)||'岔路', question:S(raw.question,300), caveat:S(raw.caveat,400), builtin:!!raw.builtin,
+  const pack = {title:S(raw.title,40)||'岔路', question:S(raw.question,300), caveat:S(raw.caveat,400), builtin:!!raw.builtin, composed:!!raw.composed,
     options:{A:{name:S(raw.options&&raw.options.A&&raw.options.A.name,24)||'选项一'},B:{name:S(raw.options&&raw.options.B&&raw.options.B.name,24)||'选项二'}},
     years: clamp(Math.round(Number(raw.years)||5),3,10), meters:[], events:[], rules:{}};
   (Array.isArray(raw.meters)?raw.meters:[]).slice(0,4).forEach((m,i)=>{
@@ -45,13 +45,13 @@ function sanitize(raw){
   if(pack.meters.length<1) throw new Error('岔路包里没有可比较的指标');
   const mids = new Set(pack.meters.map(m=>m.id));
   const rr = raw.rules||{};
-  Object.keys(rr).slice(0,24).forEach(id=>{
+  Object.keys(rr).slice(0, raw.builtin ? 60 : 24).forEach(id=>{
     const r=rr[id]||{}; const lib = r.lib && LIB[r.lib];
     if(lib) pack.rules[id]={name:lib.name,field:lib.field,says:lib.says,src:lib.src,url:lib.url,tier:lib.tier||'study',why:S(r.why,160)};
     else { const t = r.tier==='analogy'?'analogy':(r.tier==='assume'?'assume':'unverified');
       pack.rules[id]={name:S(r.name,24)||'未命名规律',field:S(r.field,24),says:S(r.says,220),src:t==='analogy'?'类比，不是证据':(t==='assume'?'没有数据来源，是模型的设定':'由模型提出，没有核实过出处'),url:'',tier:t,why:S(r.why,160)}; }
   });
-  (Array.isArray(raw.events)?raw.events:[]).slice(0,20).forEach((e,i)=>{
+  (Array.isArray(raw.events)?raw.events:[]).slice(0, raw.builtin ? 120 : 20).forEach((e,i)=>{
     const rule = pack.rules[e.rule] ? e.rule : null;
     const tier = rule ? pack.rules[rule].tier : 'assume';
     const eff = {};

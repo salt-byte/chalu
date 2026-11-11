@@ -16,19 +16,33 @@ function status(msg, err){ $('status').textContent = msg; $('status').className 
 
 /* ---------- 标题 ---------- */
 function initTitle(){
-  const P = PACKS;
+  const P = PACKS, n = comboCount();
+  $('combo').textContent = '常见的岔路。六个维度、每条路 '+n.per+' 种拼法，这套规则一共能拼出 '+n.pairs.toLocaleString('zh-CN')+' 种岔路。';
+  $('pairs').innerHTML = COMMON_PAIRS.map((c,i) => '<button data-i="'+i+'">'+esc(c[0])+'</button>').join('') + '<button class="rand" id="rand">随机抽一个岔路</button>';
+  $('pairs').querySelectorAll('button[data-i]').forEach(b => b.onclick = () => { const c = COMMON_PAIRS[+b.dataset.i]; blip(440,.12); openComposed(c[1], c[2], ''); });
+  $('rand').onclick = () => { const r = () => { const o = {}; DIMS.forEach(d => o[d.id] = d.vals[Math.floor(Math.random()*d.vals.length)][0]); return o; }; blip(520,.12); openComposed(r(), r(), '这是随机抽出的一个岔路。'); };
   $('presets').innerHTML = P.map((b,i) => '<button data-i="'+i+'"><b>'+esc(b.title)+'</b><span class="small muted">'+esc(b.question)+'</span></button>').join('');
-  $('presets').querySelectorAll('button').forEach(b => b.onclick = () => { blip(440,.12); brief(sanitize(P[+b.dataset.i])); });
+  $('presets').querySelectorAll('button').forEach(b => b.onclick = () => { blip(440,.12); G.attrs = null; brief(sanitize(P[+b.dataset.i])); });
   $('gen').onclick = generate;
+}
+function openComposed(a, b, note){ G.attrs = {A:Object.assign({}, a), B:Object.assign({}, b)}; brief(sanitize(compose(G.attrs.A, G.attrs.B)), note); }
+function renderBuilder(){
+  if(!G.attrs){ $('builder').innerHTML = ''; return; }
+  const p = G.pack;
+  $('builder').innerHTML = '<p class="small muted" style="margin-bottom:10px">这个岔路是拼出来的。不对的地方直接改，每改一处，规则会重新装配。</p><div class="builder">'+['A','B'].map(k =>
+    '<div class="bcol '+k+'"><h3>'+esc(p.options[k].name)+'</h3>'+DIMS.map(d => { if(d.id==='pos' && !d.only.includes(G.attrs[k].dest)) return '';
+      return '<div class="dim"><span>'+d.name+'</span><div class="opts">'+d.vals.map(([v,nm]) => '<button data-k="'+k+'" data-d="'+d.id+'" data-v="'+v+'" aria-pressed="'+((G.attrs[k][d.id]||DEF[d.id])===v)+'">'+nm+'</button>').join('')+'</div></div>'; }).join('')+'</div>').join('')+'</div>';
+  $('builder').querySelectorAll('button[data-k]').forEach(b => b.onclick = () => { G.attrs[b.dataset.k][b.dataset.d] = b.dataset.v; blip(600,.05,.03);
+    const y = window.scrollY; brief(sanitize(compose(G.attrs.A, G.attrs.B)), G.note); window.scrollTo(0, y); });
 }
 async function generate(){
   const q = $('q').value.trim(), key = $('key').value.trim();
   if(q.length < 4){ status('写一句你在哪两条路之间犹豫。', true); return; }
   if(!key){
-    // 和八十亿分之一一样：不调用模型，在内置的岔路里找最接近的
-    const hit = matchPack(q);
-    if(!hit){ status('内置的六个岔路里没有和这句话接近的。下面挑一个最像的，或者在「用自己的密钥」里让模型现场拆。', true); return; }
-    blip(440,.12); brief(sanitize(hit), '你写的是「'+q.slice(0,40)+(q.length>40?'…':'')+'」。最接近的内置岔路是这一个。'); return;
+    // 和八十亿分之一一样：不调用模型。从这句话里读出两条路的属性，规则自己装配
+    const d = parseDilemma(q), hand = matchPack(q);
+    const note = d.found ? '你写的是「'+q.slice(0,40)+(q.length>40?'…':'')+'」。下面是读出来的两条路。' : '这句话里没读出具体的路，先给你两条默认的，在下面改成你的情况。';
+    blip(440,.12); openComposed(d.A, d.B, note + (hand ? ' 也有一个精修版的相近岔路：「'+hand.title+'」，可以回标题页挑。' : '')); return;
   }
   blip(440,.12); show('loading');
   try{
@@ -49,7 +63,7 @@ async function generate(){
 
 /* ---------- 出发前 ---------- */
 function brief(pack, note){
-  G.pack = pack; G.orig = copyOf(pack);
+  G.pack = pack; G.orig = copyOf(pack); G.note = note || '';
   const rs = Object.values(pack.rules), n = t => rs.filter(r => r.tier===t).length;
   $('bq').textContent = pack.question; $('bA').textContent = pack.options.A.name; $('bB').textContent = pack.options.B.name;
   $('facts').innerHTML =
@@ -57,8 +71,9 @@ function brief(pack, note){
     '<dt>比什么</dt><dd>'+pack.meters.map(m => esc(m.name)).join('、')+'</dd>'+
     '<dt>规则</dt><dd>'+rs.length+' 条：'+(n('study')+n('stat'))+' 条带论文出处'+(n('unverified')?'，'+n('unverified')+' 条是模型提出、没有核实过的':'')+(n('analogy')?'，'+n('analogy')+' 条是类比':'')+(n('assume')?'，'+n('assume')+' 条是设定':'')+'</dd>'+
     '<dt>途中</dt><dd>'+(pack.choices.length ? '有 '+pack.choices.length+' 处要你自己拿主意' : '没有需要你拿主意的地方，只看事情怎么发生')+'</dd>';
-  $('bcav').textContent = (note ? note+' ' : '') + (pack.builtin ? '这个难题是人工查证过的示例。' : '这个难题是模型根据你写的话现场拆的。') + (pack.caveat ? '最可能算错的地方：'+pack.caveat : '');
-  show('brief');
+  $('bcav').textContent = (note ? note+' ' : '') + (pack.composed ? '' : pack.builtin ? '这个难题是人工查证过的示例。' : '这个难题是模型根据你写的话现场拆的。') + (pack.caveat ? '最可能算错的地方：'+pack.caveat : '');
+  renderBuilder();
+  if(!$('brief').classList.contains('on')) show('brief');
 }
 
 /* ---------- 走 ---------- */
