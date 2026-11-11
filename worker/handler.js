@@ -19,7 +19,7 @@ export default {
     if(!ALLOW.includes(origin)) return reply(403, { error: '这个转发站只服务《岔路》的网页' }, origin);
     const KEY = cleanKey(env.ARK_API_KEY) || cleanKey(env.DEEPSEEK_API_KEY);
     if(!KEY) return reply(503, { error: '转发站还没有配置密钥' }, origin);
-    const ark = !!cleanKey(env.ARK_API_KEY) || /^ark-/i.test(KEY);
+    const ark = !!cleanKey(env.ARK_API_KEY) || /^ark/i.test(KEY);
     const BASE = (String(env.CHALU_BASE_URL || '').trim() || (ark ? ARK_BASE : DS_BASE)).replace(/\/+$/, '').replace(/\/chat\/completions$/, '');
     const MODEL = String(env.CHALU_MODEL || '').trim() || (ark ? '' : 'deepseek-flash');
     const WHO = ark ? '火山方舟' : 'DeepSeek';
