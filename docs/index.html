@@ -194,10 +194,7 @@ body.at-title #stage{opacity:.5}
     <label for="q"><strong>写下你的难题。</strong><span class="muted">在哪两条路之间犹豫，各自吸引你和让你担心的是什么。</span></label>
     <textarea id="q" maxlength="600" placeholder="比如：手里有两个 offer，一个是大厂的边缘部门，一个是中厂的核心部门……"></textarea>
     <div class="row"><button class="go" id="gen">找到我的岔路</button><span class="status" id="status" role="status"></span></div>
-    <details id="byok"><summary>内置的都不像？用自己的 DeepSeek 密钥让模型现场拆</summary>
-      <label for="key" class="small muted">密钥只留在这个页面的内存里，关掉就没了，不会上传到任何别的地方。它会从你的浏览器直接发给 DeepSeek。现场拆出来的规则，库外的部分会标成「未核实」。</label>
-      <input id="key" type="password" autocomplete="off" placeholder="sk-..." style="font:inherit;width:100%;padding:8px 10px;margin-top:8px;background:var(--panel);color:var(--ink);border:1.5px solid var(--line);border-radius:2px">
-    </details>
+    <input id="key" type="hidden" value="">
   </div>
   <div class="wrap" style="gap:10px;margin:0;max-width:none">
     <p class="muted small" id="combo"></p>
