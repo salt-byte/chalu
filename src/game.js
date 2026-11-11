@@ -38,6 +38,20 @@ function renderBuilder(){
 async function generate(){
   const q = $('q').value.trim(), key = $('key').value.trim();
   if(q.length < 4){ status('写一句你在哪两条路之间犹豫。', true); return; }
+  if(!key && API){
+    // 内置的模型：经由转发站调用 DeepSeek，失败就退回本地拼装
+    blip(440,.12); show('loading');
+    try{
+      const res = await fetch(API, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({q})});
+      const data = await res.json().catch(() => ({}));
+      if(!res.ok) throw new Error(data.error || ('转发站返回 '+res.status));
+      const pack = sanitize(data.pack);
+      if(pack.refuse){ show('title'); status(pack.refuse, true); return; }
+      G.attrs = null; brief(pack); return;
+    }catch(e){
+      const d = parseDilemma(q); openComposed(d.A, d.B, '模型这次没拆成功（'+String(e.message||e).slice(0,40)+'），先用属性拼了一个，可以在下面改。'); return;
+    }
+  }
   if(!key){
     // 和八十亿分之一一样：不调用模型。从这句话里读出两条路的属性，规则自己装配
     const d = parseDilemma(q), hand = matchPack(q);

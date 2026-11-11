@@ -15,6 +15,7 @@ const html = `<!DOCTYPE html>
 <body>
 ${r('body.html')}
 <script src="three.min.js"></script>
+<script>window.CHALU_API = ${JSON.stringify(process.env.CHALU_API_URL || '')};</script>
 <script>
 ${r('engine.js').split("if(typeof module")[0]}
 ${r('compose.js').split("if(typeof module")[0]}
@@ -34,4 +35,7 @@ fs.mkdirSync(p.join(__dirname, 'docs'), { recursive: true });
 fs.writeFileSync(p.join(__dirname, 'docs', 'index.html'), html);
 fs.copyFileSync(p.join(__dirname, 'vendor', 'three.min.js'), p.join(__dirname, 'docs', 'three.min.js'));
 fs.writeFileSync(p.join(__dirname, 'docs', '.nojekyll'), '');
+// Cloudflare Worker：把规律库和提示词拼进一个文件，整段贴进 Cloudflare 后台即可
+const libSrc = r('engine.js'); const libObj = libSrc.slice(libSrc.indexOf('const LIB = {'), libSrc.indexOf('\n};', libSrc.indexOf('const LIB = {')) + 3);
+fs.writeFileSync(p.join(__dirname, 'worker', 'worker.js'), '// 由 build.js 生成，不要手改。改 worker/handler.js、src/prompt.js 或 src/engine.js 后重新 npm run build。\n' + libObj + '\n' + r('prompt.js').replace(/^if\(typeof LIB.*\n/, '').split("if(typeof module")[0] + '\n' + fs.readFileSync(p.join(__dirname, 'worker', 'handler.js'), 'utf8'));
 console.log('built dist/index.html', html.length);
