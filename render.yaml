@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: chalu
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: CHALU_PER_DAY
+        value: "300"

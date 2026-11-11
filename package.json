@@ -1,0 +1,8 @@
+{
+  "name": "chalu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "岔路：两条路你都走的人生模拟游戏",
+  "scripts": { "build": "node build.js", "start": "node server.js" },
+  "engines": { "node": ">=20" }
+}

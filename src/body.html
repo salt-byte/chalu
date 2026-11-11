@@ -1,0 +1,81 @@
+<div id="stage" aria-hidden="true"></div>
+<div class="top"><button id="snd" aria-pressed="true">声音：开</button></div>
+
+<section class="screen on" id="title"><div class="wrap">
+  <div>
+    <h1>岔路</h1>
+    <svg class="fork fallback" viewBox="0 0 720 150" role="img" aria-label="一条路分成两条">
+      <path class="stem" d="M8 75 H250"/>
+      <path class="la" d="M250 75 C330 75 340 25 420 25 H712"/>
+      <path class="lb" d="M250 75 C330 75 340 125 420 125 H712"/>
+    </svg>
+  </div>
+  <p class="lede">有些路只能走一次。所以人会去算命，或者去刷别人的经历。<br>在这里，<strong>两条路你都走。</strong></p>
+  <div class="wrap narrow" style="gap:12px;margin:0;width:100%">
+    <label for="q"><strong>写下你的难题。</strong><span class="muted">在哪两条路之间犹豫，各自吸引你和让你担心的是什么。</span></label>
+    <textarea id="q" maxlength="600" placeholder="比如：手里有两个 offer，一个是大厂的边缘部门，一个是中厂的核心部门……"></textarea>
+    <div class="row"><button class="go" id="gen">拆开这个难题</button><span class="status" id="status" role="status"></span></div>
+    <details id="byok"><summary>用自己的 DeepSeek 密钥试（只在这台电脑上）</summary>
+      <label for="key" class="small muted">密钥只留在这个页面的内存里，关掉就没了，不会上传到任何别的地方。它会从你的浏览器直接发给 DeepSeek。不要在公开分享的版本里用这个入口。</label>
+      <input id="key" type="password" autocomplete="off" placeholder="sk-..." style="font:inherit;width:100%;padding:8px 10px;margin-top:8px;background:var(--panel);color:var(--ink);border:1.5px solid var(--line);border-radius:2px">
+    </details>
+  </div>
+  <div class="wrap" style="gap:10px;margin:0;max-width:none">
+    <p class="muted small">或者先走一个现成的。这两个的规则都逐条对过论文。</p>
+    <div class="presets" id="presets"></div>
+  </div>
+  <p class="small muted" style="max-width:40em">它不预测你会怎样，也不给建议。每件事发生时会写明是哪条规律触发的、这条规律有多可靠，所有概率都是设定并且可以改的。</p>
+</div></section>
+
+<section class="screen" id="loading"><div class="wrap narrow" style="padding-top:20vh">
+  <p class="loader" id="loadtext">正在把你的难题拆成两条路</p>
+  <p class="muted">大约需要半分钟。模型在找适用的规律，库里没有的会标成「未核实」。</p>
+</div></section>
+
+<section class="screen" id="brief"><div class="wrap">
+  <p class="muted" id="bq"></p>
+  <div class="vs"><h2 class="A" id="bA"></h2><span>与</span><h2 class="B" id="bB"></h2></div>
+  <dl class="facts" id="facts"></dl>
+  <p class="small muted" id="bcav"></p>
+  <div class="row"><button class="go" id="depart">两条路一起出发</button><button id="back1">换一个难题</button></div>
+</div></section>
+
+<section class="screen" id="play"><div class="wrap" style="gap:16px">
+  <div class="yearbar"><h2 id="ytitle"></h2><div class="pips" id="pips"></div><span class="small muted" id="yhint"></span><span class="small muted only3d" style="margin-left:auto">路越高，主指标越高。拖动画面可以转着看。</span></div>
+  <div class="lanes">
+    <article class="lane A"><h3 id="nA"></h3><div class="meters" id="mA"></div><div class="feed" id="fA"></div></article>
+    <article class="lane B"><h3 id="nB"></h3><div class="meters" id="mB"></div><div class="feed" id="fB"></div></article>
+  </div>
+  <div class="dock"><button class="go" id="next"></button><span class="small muted" id="dockhint"></span></div>
+</div></section>
+
+<section class="screen" id="bet"><div class="wrap narrow" style="padding-top:10vh">
+  <p class="big" id="betq"></p>
+  <p class="muted">你刚把两条路各走了一遍。只凭这一遍，哪条路更好？</p>
+  <div class="bet"><button class="A" id="betA"></button><button class="B" id="betB"></button><button class="none" id="betN">说不准</button></div>
+</div></section>
+
+<section class="screen" id="reveal"><div class="wrap">
+  <p class="big glass" id="rv1"></p>
+  <div class="window only3d"><span class="small muted glass">每一条细线是另一个你走出的路。越往外，结局越高。拖动可以转着看，滚轮缩放。</span></div>
+  <div class="sheet">
+  <p class="muted small only3d">同一批数据的平面图：</p>
+  <canvas id="cv" width="1000" height="460" role="img" aria-label="两千条人生轨迹，其中两条是你刚走过的"></canvas>
+  <div class="key" id="key"></div>
+  <div class="two" id="stats"></div>
+  <p class="big" id="rv2"></p>
+  <div id="ob"></div>
+  <div class="wrap" style="gap:12px;margin:0;max-width:none">
+    <h2>这一局你撞上的规律</h2>
+    <p class="muted small">亮着的是你刚才遇到的，暗的是这个难题里有、但这一遍没轮到你的。</p>
+    <div class="deck" id="deck"></div>
+  </div>
+  <details id="kd"><summary>这些概率是谁定的？改掉它们再看</summary>
+    <p class="small muted" style="margin-bottom:14px">研究大多只告诉我们方向，不告诉我们具体是百分之几。模拟里所有的概率都是设定的。下面是最影响结果的几个。</p>
+    <div id="knobs"></div>
+  </details>
+  <p class="small muted" id="cav"></p>
+  <div class="row"><button class="go" id="again">同一个难题，再活一遍</button><button id="newq">换一个难题</button><button id="copy">复制这一局</button><span class="small muted" id="copied" role="status"></span></div>
+  <p class="small muted">《岔路》v1.1。规律库里的研究多数样本不在中国，搬到你的处境里用本身就是一种假设。这不是建议，也不是预测。</p>
+  </div>
+</div></section>
