@@ -34,6 +34,7 @@ function buildPrompt(q){
                 {"label": "...", "text": "...", "sets": "", "tone": "flat", "rule": "", "effects": {}}]}
  ],
  "closing": {"A": "走完 A 路时亮出的那条类比规律的 id", "B": "..."},
+ "stance": {"change": "A|B|none，哪条路是改变现状、去做一件新的事；两条都是或都不是填 none", "lock": "A|B|none，哪条路走了之后明显更难回头；说不准填 none"},
  "caveat": "这次模拟最可能漏掉或算错的东西，一句话，要具体"
 }
 

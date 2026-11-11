@@ -23,7 +23,7 @@
     <p class="muted small" style="margin-top:8px">精修过的六个：事件逐句手写，规则逐条对过论文。</p>
     <div class="presets" id="presets"></div>
   </div>
-  <p class="small muted" style="max-width:40em">它不预测你会怎样，也不给建议。每件事发生时会写明是哪条规律触发的、这条规律有多可靠，所有概率都是设定并且可以改的。</p>
+  <p class="small muted" style="max-width:40em">它不预测你会怎样。走完之后，它把每条规律站在哪一边、依据有多硬，一条条摆给你，判断由你下。每件事发生时会写明是哪条规律触发的、这条规律有多可靠，所有概率都是设定并且可以改的。</p>
 </div></section>
 
 <section class="screen" id="loading"><div class="wrap narrow" style="padding-top:20vh">
@@ -66,6 +66,14 @@
   <p class="big" id="rv2"></p>
   <div id="ob"></div>
   <div class="wrap" style="gap:12px;margin:0;max-width:none">
+    <h2>道理站在哪一边</h2>
+    <p class="muted small">规律决定模拟里会发生什么；道理说的是，看着这些结果该怎么判断。下面按你最看重的那一项，把适用的道理一条条套到两条路上。先从这一局的结果里读出几个论点，每个论点下面列出支持它的道理，也列出说法相反的道理。研究标论文出处；兵法、寓言、古语、俗语标原书，它们是前人的经验，不是统计证据。</p>
+    <div id="argsum"></div>
+    <p class="small" style="margin-top:6px">你最看重哪一项？</p>
+    <div class="row" id="argpick"></div>
+    <div id="argue"></div>
+  </div>
+  <div class="wrap" style="gap:12px;margin:0;max-width:none">
     <h2>这一局你撞上的规律</h2>
     <p class="muted small">亮着的是你刚才遇到的，暗的是这个难题里有、但这一遍没轮到你的。</p>
     <div class="deck" id="deck"></div>
@@ -76,6 +84,6 @@
   </details>
   <p class="small muted" id="cav"></p>
   <div class="row"><button class="go" id="again">同一个难题，再活一遍</button><button id="newq">换一个难题</button><button id="copy">复制这一局</button><span class="small muted" id="copied" role="status"></span></div>
-  <p class="small muted">《岔路》v1.1。规律库里的研究多数样本不在中国，搬到你的处境里用本身就是一种假设。这不是建议，也不是预测。</p>
+  <p class="small muted">《岔路》v1.2。规律库里的研究多数样本不在中国，搬到你的处境里用本身就是一种假设。这不是预测；道理只给方向和把握，分量由你定。</p>
   </div>
 </div></section>

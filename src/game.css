@@ -164,3 +164,22 @@ body.at-title #stage{opacity:.5}
 .dim .opts button{font-size:13.5px;font-weight:500;padding:3px 10px;border-width:1.5px;border-color:var(--line);color:var(--muted)}
 .dim .opts button[aria-pressed="true"]{border-color:var(--lc);color:var(--night);background:var(--lc)}
 .dim .opts button:hover:not([aria-pressed="true"]){background:transparent;color:var(--ink);border-color:var(--ink)}
+
+/* 道理账 */
+.argsum{display:flex;flex-direction:column;gap:4px;font-size:15px;line-height:1.7}
+.argsum .lv,.argcard .lv{font-family:var(--mono);font-size:12.5px;border:1.5px solid currentColor;border-radius:2px;padding:0 6px;margin-left:6px;white-space:nowrap}
+.lv.hi{color:var(--good)} .lv.mid{color:var(--ink)} .lv.lo{color:var(--muted);border-style:dashed}
+.sideA{color:var(--a);font-weight:700} .sideB{color:var(--b);font-weight:700}
+#argpick button.on{border-color:var(--ink);background:var(--ink);color:var(--night)}
+.argcard{background:var(--panel);border:1px solid var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.argcard .head{font-size:18px;line-height:1.6}
+.argrow{display:grid;grid-template-columns:10.5em 1fr;gap:4px 12px;align-items:baseline;font-size:14px;line-height:1.65;padding:8px 0;border-top:1px solid var(--line)}
+.argrow .push{font-family:var(--mono);font-size:13px;line-height:1.7}
+.argrow .txt b{color:var(--ink)} .argrow .txt{color:var(--muted)}
+@media (max-width:560px){.argrow{grid-template-columns:1fr}}
+.argrow .apply{display:block;color:var(--ink);margin:2px 0}
+.argrow .says{display:block;font-size:13px}
+#ledger summary{cursor:pointer;font-size:14px;padding-top:8px;border-top:1px solid var(--line)}
+.argrow .dl{display:block;font-size:13px;margin-top:4px}
+.argrow .apply{font-size:15px;font-weight:500}
+details.more{margin-top:4px} details.more summary{cursor:pointer;font-size:13px;color:var(--muted)}

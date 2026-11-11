@@ -174,6 +174,25 @@ body.at-title #stage{opacity:.5}
 .dim .opts button{font-size:13.5px;font-weight:500;padding:3px 10px;border-width:1.5px;border-color:var(--line);color:var(--muted)}
 .dim .opts button[aria-pressed="true"]{border-color:var(--lc);color:var(--night);background:var(--lc)}
 .dim .opts button:hover:not([aria-pressed="true"]){background:transparent;color:var(--ink);border-color:var(--ink)}
+
+/* 道理账 */
+.argsum{display:flex;flex-direction:column;gap:4px;font-size:15px;line-height:1.7}
+.argsum .lv,.argcard .lv{font-family:var(--mono);font-size:12.5px;border:1.5px solid currentColor;border-radius:2px;padding:0 6px;margin-left:6px;white-space:nowrap}
+.lv.hi{color:var(--good)} .lv.mid{color:var(--ink)} .lv.lo{color:var(--muted);border-style:dashed}
+.sideA{color:var(--a);font-weight:700} .sideB{color:var(--b);font-weight:700}
+#argpick button.on{border-color:var(--ink);background:var(--ink);color:var(--night)}
+.argcard{background:var(--panel);border:1px solid var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.argcard .head{font-size:18px;line-height:1.6}
+.argrow{display:grid;grid-template-columns:10.5em 1fr;gap:4px 12px;align-items:baseline;font-size:14px;line-height:1.65;padding:8px 0;border-top:1px solid var(--line)}
+.argrow .push{font-family:var(--mono);font-size:13px;line-height:1.7}
+.argrow .txt b{color:var(--ink)} .argrow .txt{color:var(--muted)}
+@media (max-width:560px){.argrow{grid-template-columns:1fr}}
+.argrow .apply{display:block;color:var(--ink);margin:2px 0}
+.argrow .says{display:block;font-size:13px}
+#ledger summary{cursor:pointer;font-size:14px;padding-top:8px;border-top:1px solid var(--line)}
+.argrow .dl{display:block;font-size:13px;margin-top:4px}
+.argrow .apply{font-size:15px;font-weight:500}
+details.more{margin-top:4px} details.more summary{cursor:pointer;font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -202,7 +221,7 @@ body.at-title #stage{opacity:.5}
     <p class="muted small" style="margin-top:8px">精修过的六个：事件逐句手写，规则逐条对过论文。</p>
     <div class="presets" id="presets"></div>
   </div>
-  <p class="small muted" style="max-width:40em">它不预测你会怎样，也不给建议。每件事发生时会写明是哪条规律触发的、这条规律有多可靠，所有概率都是设定并且可以改的。</p>
+  <p class="small muted" style="max-width:40em">它不预测你会怎样。走完之后，它把每条规律站在哪一边、依据有多硬，一条条摆给你，判断由你下。每件事发生时会写明是哪条规律触发的、这条规律有多可靠，所有概率都是设定并且可以改的。</p>
 </div></section>
 
 <section class="screen" id="loading"><div class="wrap narrow" style="padding-top:20vh">
@@ -245,6 +264,14 @@ body.at-title #stage{opacity:.5}
   <p class="big" id="rv2"></p>
   <div id="ob"></div>
   <div class="wrap" style="gap:12px;margin:0;max-width:none">
+    <h2>道理站在哪一边</h2>
+    <p class="muted small">规律决定模拟里会发生什么；道理说的是，看着这些结果该怎么判断。下面按你最看重的那一项，把适用的道理一条条套到两条路上。先从这一局的结果里读出几个论点，每个论点下面列出支持它的道理，也列出说法相反的道理。研究标论文出处；兵法、寓言、古语、俗语标原书，它们是前人的经验，不是统计证据。</p>
+    <div id="argsum"></div>
+    <p class="small" style="margin-top:6px">你最看重哪一项？</p>
+    <div class="row" id="argpick"></div>
+    <div id="argue"></div>
+  </div>
+  <div class="wrap" style="gap:12px;margin:0;max-width:none">
     <h2>这一局你撞上的规律</h2>
     <p class="muted small">亮着的是你刚才遇到的，暗的是这个难题里有、但这一遍没轮到你的。</p>
     <div class="deck" id="deck"></div>
@@ -255,7 +282,7 @@ body.at-title #stage{opacity:.5}
   </details>
   <p class="small muted" id="cav"></p>
   <div class="row"><button class="go" id="again">同一个难题，再活一遍</button><button id="newq">换一个难题</button><button id="copy">复制这一局</button><span class="small muted" id="copied" role="status"></span></div>
-  <p class="small muted">《岔路》v1.1。规律库里的研究多数样本不在中国，搬到你的处境里用本身就是一种假设。这不是建议，也不是预测。</p>
+  <p class="small muted">《岔路》v1.2。规律库里的研究多数样本不在中国，搬到你的处境里用本身就是一种假设。这不是预测；道理只给方向和把握，分量由你定。</p>
   </div>
 </div></section>
 
@@ -288,7 +315,10 @@ const LIB = {
   gradmh:{name:'博士生的心理负担',field:'公共卫生',says:'美国八所顶尖经济学博士项目里，约四分之一的学生有中度以上的抑郁或焦虑症状，是普通人群的两倍多，读到六年级以上升到三分之一以上。',src:'Bolotnyy 等，Journal of Economic Literature，2022',url:'https://consensus.app/papers/details/w:2207a179-a461-4f02-9a63-0caed4942350/?utm_source=claude_desktop'},
   public:{name:'体制内的满意度',field:'公共管理',says:'欧洲 19 国的调查：公共部门员工的工作满意度高于私营部门，在「担心丢工作」的人越多的国家，这个差距越大。',src:'Fernández Puente、Sánchez-Sánchez，SAGE Open，2021',url:'https://consensus.app/papers/details/w:496b9423-5f41-426a-b26a-398dc23ff533/?utm_source=claude_desktop'},
   ldr:{name:'异地恋的理想化',field:'传播学',says:'异地的情侣比同城的更稳定，因为见得少，彼此被理想化了。但一旦搬到一起，分手的反而更多；分开越久、理想化越重的，搬到一起后越不稳。',src:'Stafford、Merolla，Journal of Social and Personal Relationships，2007',url:'https://consensus.app/papers/details/w:e4499105-e68d-49e0-89f1-64aa97158889/?utm_source=claude_desktop'},
-  bflp:{name:'大鱼小池塘',field:'教育心理学',tier:'analogy',says:'能力相同的学生，在平均水平更高的学校里对自己的评价更低。127 万名学生的汇总效应为 −0.28。证据来自学校，用到别处是类比。',src:'Fang 等，Frontiers in Psychology，元分析',url:'https://consensus.app/papers/details/w:c6956f5a-c7dc-4eeb-9741-f20f5615cffe/?utm_source=claude_desktop'}
+  bflp:{name:'大鱼小池塘',field:'教育心理学',tier:'analogy',says:'能力相同的学生，在平均水平更高的学校里对自己的评价更低。127 万名学生的汇总效应为 −0.28。证据来自学校，用到别处是类比。',src:'Fang 等，Frontiers in Psychology，元分析',url:'https://consensus.app/papers/details/w:c6956f5a-c7dc-4eeb-9741-f20f5615cffe/?utm_source=claude_desktop'},
+  adapt:{name:'对人生大事的适应',field:'幸福感研究',says:'德国二十年的追踪数据：结婚、离婚、丧偶、生孩子、被裁之后，生活满意度会在几年内回到原来的水平。失业是例外，男性对失业几乎适应不了。',src:'Clark、Diener 等，Economic Journal，2008，德国追踪数据',url:'https://consensus.app/papers/details/3092e76988c35711b9c12311646bd95c/?utm_source=claude_desktop'},
+  bigcity:{name:'大城市的经验更值钱',field:'城市经济学',says:'在大城市工作的人一来就有工资溢价，而且每年积累的经验更值钱，收入涨得更快。这部分经验的价值在搬走之后仍然留着。',src:'De la Roca、Puga，Review of Economic Studies，2016，西班牙行政数据',url:'https://consensus.app/papers/details/4d60a2adda6a53a3bed0f1d5530f782e/?utm_source=claude_desktop'},
+  selfemp:{name:'单干的收入代价',field:'劳动经济学',says:'多数自雇者的起步收入和收入增长都低于受雇，干满十年的人收入中位数比受雇低约 35%。他们仍然留下来，说明自己做主这类非金钱回报很大。',src:'Hamilton，Journal of Political Economy，2000',url:'https://consensus.app/papers/details/0ed2c3af8eb25ab3b7a2bed1ff9dd892/?utm_source=claude_desktop'}
 };
 
 // 把任何来源的包洗成引擎能跑的形状。模型输出不可信，所有字段都钳住。
@@ -342,6 +372,7 @@ function sanitize(raw){
       prompt:{A:S(ab2(c.prompt,'A'),140),B:S(ab2(c.prompt,'B'),140)}, requires:c.requires?S(c.requires,24):'', options:opts});
   });
   if(raw.closing && typeof raw.closing==='object') pack.closing={A:S(raw.closing.A,24),B:S(raw.closing.B,24)};
+  const AB = v => v==='A'||v==='B' ? v : ''; pack.stance = {change:AB(raw.stance&&raw.stance.change), lock:AB(raw.stance&&raw.stance.lock)};
   return pack;
 }
 function ab2(v,path){ return (v && typeof v==='object') ? v[path] : v; }
@@ -657,12 +688,188 @@ BUILTIN2.keys = ['辞职','单干','创业','自己做','副业','裸辞','存�
 [BUILTIN3, BUILTIN5].forEach(b => { const i = b.meters.findIndex(m => m.id === 'mood'); b.meters.unshift(b.meters.splice(i, 1)[0]); b.meters[0].name = '满意度'; });
 const PACKS = [BUILTIN, BUILTIN2, BUILTIN3, BUILTIN4, BUILTIN5, BUILTIN6];
 // 和八十亿分之一一样，运行时不调用模型：在内置的岔路里找最接近的那个。
+// 哪条路是改变现状、哪条更难回头。只标确定的，拿不准的留空。
+const STANCE = {'辞职单干，还是再干一年':{change:'A',lock:'A'}, '留在一线，还是回老家':{change:'B'}, '去对方的城市，还是继续异地':{change:'A'}};
+PACKS.forEach(p => { if(STANCE[p.title]) p.stance = STANCE[p.title]; });
 function matchPack(q){
   const t = String(q).toLowerCase(); let best = null, bs = 0;
   PACKS.forEach(p => { const s = (p.keys||[]).reduce((n,k) => n + (t.includes(k.toLowerCase()) ? (k.length >= 3 ? 2 : 1) : 0), 0); if(s > bs){ bs = s; best = p; } });
   return best;
 }
 
+// 道理库：规律库说「事情通常会怎样」，道理库说「所以该怎么判断」。每条都有论文出处。
+// 用法见下面的 judge()：按玩家最看重的那一项，把适用的道理逐条套到两条路上。
+const DAOLI = {
+  outside:{name:'外部视角', field:'决策心理学', says:'人习惯把自己的处境当成独一份，只按自己的计划和想象去估计，忽略同类情况的统计结果。看同类的整体分布，比看自己那一个故事准。', src:'Kahneman、Lovallo，Management Science，1993', url:'https://consensus.app/papers/details/362af47ccd0951fdbdcba53cf4e1a7ba/?utm_source=claude_desktop'},
+  outcome:{name:'结果偏差', field:'决策心理学', says:LIB.outcome.says, src:LIB.outcome.src, url:LIB.outcome.url},
+  coin:{name:'拿不定时，改变的人更快乐', field:'行为经济学', says:LIB.coin.says, src:LIB.coin.src, url:LIB.coin.url},
+  regret:{name:'长期更后悔没做的事', field:'社会心理学', says:LIB.regret.says, src:LIB.regret.src, url:LIB.regret.url},
+  loss:{name:'损失厌恶', field:'行为经济学', says:'同样大小的一失一得，失去带来的分量更重。人因此会为了躲开可能的损失，放弃总体更好的选择。', src:'Tversky、Kahneman，Quarterly Journal of Economics，1991', url:'https://consensus.app/papers/details/5f19e28f50235111b12d89fa42b36c13/?utm_source=claude_desktop'},
+  logmoney:{name:'钱按倍数起作用', field:'幸福感研究', says:'幸福感大致随收入的对数上升：从一万到两万，和从十万到二十万，带来的提升差不多。所以比钱要看倍数，不看差额；少掉一半比多出一半更疼。', src:'Killingsworth、Kahneman、Mellers，PNAS，2023', url:'https://consensus.app/papers/details/d81abcc1dc615413a0ea4d2d91a07bad/?utm_source=claude_desktop'},
+  feelmoney:{name:'钱管评价，不管心情', field:'幸福感研究', says:'盖洛普全球调查里，收入能预测人对自己生活的总体评价，但对每天心情的预测弱得多。每天的心情更多取决于有没有在学东西、能不能自己做主、是否被尊重、遇事有没有人可靠。', src:'Diener 等，Journal of Personality and Social Psychology，2010', url:'https://consensus.app/papers/details/391ec16ed8825869b92bd05b0423a87a/?utm_source=claude_desktop'},
+  focus:{name:'聚焦错觉', field:'决策心理学', says:'比较两种生活时，最显眼的那个差别会被看得过重。中西部的学生以为加州人更幸福，实际两地的生活满意度一样。', src:'Schkade、Kahneman，Psychological Science，1998', url:'https://consensus.app/papers/details/957ce277f8ad5b43aff5b05ae1362f76/?utm_source=claude_desktop'},
+  impact:{name:'影响力偏差', field:'社会心理学', says:LIB.impact.says, src:LIB.impact.src, url:LIB.impact.url},
+  revers:{name:'能反悔的决定，反而不满意', field:'社会心理学', says:'人都想给自己留退路。可实验里，可以反悔的人对自己选的东西更不满意，不能反悔的人反而更喜欢自己的选择。', src:'Gilbert、Ebert，Journal of Personality and Social Psychology，2002', url:'https://consensus.app/papers/details/9ed25d26747758fb85ddc8a28ae5d311/?utm_source=claude_desktop'},
+  maxim:{name:'非要挑出最优的人更不快乐', field:'社会心理学', says:'一心要选到最好的人，比觉得够好就行的人更不快乐、更容易后悔。这是欧美样本的结果；后来在中国样本里，这层关系不明显。', src:'Schwartz 等，Journal of Personality and Social Psychology，2002', url:'https://consensus.app/papers/details/83dd10e5fedd500ca6793e3875ca7f3f/?utm_source=claude_desktop'},
+  // 兵法、寓言、古语、俗语：前人的经验，不是统计证据。kind 标类别，src 标原书。
+  floor:{kind:'兵法', name:'先为不可胜', field:'《孙子兵法·形篇》', says:'「昔之善战者，先为不可胜，以待敌之可胜。不可胜在己，可胜在敌。」先保证自己输不掉，再等赢的机会。', src:'《孙子兵法·形篇》', url:''},
+  bubai:{kind:'兵法', name:'立于不败之地', field:'《孙子兵法·形篇》', says:'「故善战者，立于不败之地，而不失敌之败也。」会打仗的人先站在输不了的位置上。', src:'《孙子兵法·形篇》', url:''},
+  suan:{kind:'兵法', name:'多算胜，少算不胜', field:'《孙子兵法·计篇》', says:'「夫未战而庙算胜者，得算多也；未战而庙算不胜者，得算少也。多算胜，少算不胜。」开打之前算下来胜算多的一方，才值得打。', src:'《孙子兵法·计篇》', url:''},
+  xiansheng:{kind:'兵法', name:'胜兵先胜而后求战', field:'《孙子兵法·形篇》', says:'「是故胜兵先胜而后求战，败兵先战而后求胜。」赢的人是先有了赢面才动手，输的人是先动手再去碰运气。', src:'《孙子兵法·形篇》', url:''},
+  wuchang:{kind:'兵法', name:'兵无常势，水无常形', field:'《孙子兵法·虚实篇》', says:'「故兵无常势，水无常形，能因敌变化而取胜者，谓之神。」局面没有固定的样子，眼下的强弱说变就变。', src:'《孙子兵法·虚实篇》', url:''},
+  heli:{kind:'兵法', name:'合于利而动，不合于利而止', field:'《孙子兵法·火攻篇》', says:'「非利不动，非得不用，非危不战。」「合于利而动，不合于利而止。」动不动，只看动了有没有好处，不看心里痒不痒。', src:'《孙子兵法·火攻篇》', url:''},
+  jiubian:{kind:'兵法', name:'城有所不攻，地有所不争', field:'《孙子兵法·九变篇》', says:'「涂有所不由，军有所不击，城有所不攻，地有所不争。」有的路不走，有的城不打，有的地不争。放掉一些，才守得住要紧的。', src:'《孙子兵法·九变篇》', url:''},
+  zouwei:{kind:'兵法', name:'三十六策，走是上计', field:'《南齐书·王敬则传》', says:'「檀公三十六策，走是上计。」局面一年不如一年的时候，离开不丢人，是上策。', src:'《南齐书·王敬则传》', url:''},
+  zhibi:{kind:'兵法', name:'知彼知己，百战不殆', field:'《孙子兵法·谋攻篇》', says:'「知彼知己，百战不殆；不知彼而知己，一胜一负；不知彼，不知己，每战必殆。」只了解外面的形势、不了解自己，胜负各半。', src:'《孙子兵法·谋攻篇》', url:''},
+  swift:{kind:'兵法', name:'兵闻拙速', field:'《孙子兵法·作战篇》', says:'「故兵闻拙速，未睹巧之久也。」打仗只听说过笨拙但快的，没见过精巧却拖得久的。拖着本身就在消耗。', src:'《孙子兵法·作战篇》', url:''},
+  deadground:{kind:'兵法', name:'陷之死地然后生', field:'《孙子兵法·九地篇》', says:'「投之亡地然后存，陷之死地然后生。」没有退路的时候，人才会把全部力气用出来。', src:'《孙子兵法·九地篇》', url:''},
+  saiweng:{kind:'寓言', name:'塞翁失马', field:'《淮南子·人间训》', says:'边塞老人丢了马，马带回了胡人的骏马；儿子骑骏马摔断了腿，却因此躲过了征兵。一时的得失会翻过来。', src:'《淮南子·人间训》', url:''},
+  stump:{kind:'寓言', name:'守株待兔', field:'《韩非子·五蠹》', says:'宋国农夫捡到一只撞死在树桩上的兔子，「因释其耒而守株，冀复得兔」。撞上一次的好运，不能当成每年的收成。', src:'《韩非子·五蠹》', url:''},
+  threefour:{kind:'寓言', name:'朝三暮四', field:'《庄子·齐物论》', says:'早上三颗晚上四颗，猴子都怒；早上四颗晚上三颗，猴子都喜。「名实未亏而喜怒为用」，总数没变，变的只是先后。', src:'《庄子·齐物论》', url:''},
+  mend:{kind:'寓言', name:'亡羊补牢', field:'《战国策·楚策四》', says:'「见兔而顾犬，未为晚也；亡羊而补牢，未为迟也。」出了错还能补救的局面，错的代价有上限。', src:'《战国策·楚策四》', url:''},
+  tortoise:{kind:'寓言', name:'龟兔赛跑', field:'《伊索寓言》', says:'兔子起步快，中途睡了一觉；乌龟一直走，先到了终点。起点高低是一回事，每年往前走多少是另一回事。', src:'《伊索寓言》', url:''},
+  kezhou:{kind:'寓言', name:'刻舟求剑', field:'《吕氏春秋·察今》', says:'剑掉进江里，楚人在船帮上刻了个记号，等船停了从记号处下水去找。「舟已行矣，而剑不行，求剑若此，不亦惑乎。」局面在走，按老位置找东西找不到。', src:'《吕氏春秋·察今》', url:''},
+  bamiao:{kind:'寓言', name:'揠苗助长', field:'《孟子·公孙丑上》', says:'宋人嫌禾苗长得慢，一棵棵往上拔，回家说「今日病矣，予助苗长矣」，儿子跑去一看，苗都枯了。急着要早见效，反而毁了后面的收成。', src:'《孟子·公孙丑上》', url:''},
+  yugong:{kind:'寓言', name:'愚公移山', field:'《列子·汤问》', says:'「子子孙孙无穷匮也，而山不加增，何苦而不平。」每年挪一点，山不会再长高，时间站在一直做的人这边。', src:'《列子·汤问》', url:''},
+  maidu:{kind:'寓言', name:'买椟还珠', field:'《韩非子·外储说左上》', says:'郑国人看中了装珍珠的木匣，「买其椟而还其珠」。被最好看的那部分吸引，把真正值钱的退了回去。', src:'《韩非子·外储说左上》', url:''},
+  jingdi:{kind:'寓言', name:'井底之蛙', field:'《庄子·秋水》', says:'「井蛙不可以语于海者，拘于虚也。」一直待在原处的人，会把眼前这口井当成全部。', src:'《庄子·秋水》', url:''},
+  jiaotu:{kind:'寓言', name:'狡兔三窟', field:'《战国策·齐策四》', says:'冯谖对孟尝君说：「狡兔有三窟，仅得免其死耳。」多留一条退路，为的是出事时不至于没处去。', src:'《战国策·齐策四》', url:''},
+  mangren:{kind:'寓言', name:'盲人摸象', field:'《大般涅槃经》', says:'几个盲人各摸到大象的一部分，摸到腿的说象像柱子，摸到耳朵的说像簸箕。只碰到一处的人，说的都是真的，也都不是全貌。', src:'《大般涅槃经》', url:''},
+  guanzhong:{kind:'寓言', name:'管中窥豹', field:'《世说新语·方正》', says:'「此郎亦管中窥豹，时见一斑。」从竹管里看豹子，只看得见一块斑。', src:'《世说新语·方正》', url:''},
+  beigong:{kind:'寓言', name:'杯弓蛇影', field:'《晋书·乐广传》', says:'客人把墙上弓的影子看成杯里的蛇，喝下去后病了一场；弄清是影子，病就好了。一次吓人的经历，会让人长久地怕一个并不存在的东西。', src:'《晋书·乐广传》', url:''},
+  zhishang:{kind:'寓言', name:'纸上谈兵', field:'《史记·廉颇蔺相如列传》', says:'赵括谈起兵法无人能驳倒，真领兵时四十万赵军覆没。推演得再漂亮，也替代不了真上场。', src:'《史记·廉颇蔺相如列传》', url:''},
+  pofu:{kind:'寓言', name:'破釜沉舟', field:'《史记·项羽本纪》', says:'项羽渡河后「皆沉船，破釜甑，烧庐舍，持三日粮，以示士卒必死，无一还心」，九战九胜。', src:'《史记·项羽本纪》', url:''},
+  huabing:{kind:'寓言', name:'画饼充饥', field:'《三国志·魏书·卢毓传》', says:'「名如画地作饼，不可啖也。」画出来的饼不能吃。只在最好的情形里才兑现的好处，平常日子里填不了肚子。', src:'《三国志·魏书·卢毓传》', url:''},
+  goose:{kind:'寓言', name:'生金蛋的鹅', field:'《伊索寓言》', says:'农夫嫌鹅每天只下一个金蛋太慢，杀了鹅想一次取完，肚子里什么也没有。为了眼前多拿一点，把以后每年都有的那份断了。', src:'《伊索寓言》', url:''},
+  milkmaid:{kind:'寓言', name:'挤牛奶的姑娘', field:'《伊索寓言》', says:'姑娘头顶牛奶去卖，一路盘算卖了奶买蛋、蛋孵鸡、鸡换裙子，一得意摇了摇头，牛奶全洒了。还没到手的好结果，不能提前算进账里。', src:'《伊索寓言》', url:''},
+  dogshadow:{kind:'寓言', name:'叼肉的狗', field:'《伊索寓言》', says:'狗叼着肉过桥，看见水里的倒影以为是另一块更大的肉，张嘴去抢，嘴里的肉掉进了河里。', src:'《伊索寓言》', url:''},
+  foxgrapes:{kind:'寓言', name:'狐狸和葡萄', field:'《伊索寓言》', says:'狐狸够不着葡萄，就说葡萄是酸的。路一旦定了，人会自己把没选的那条说得没那么好。', src:'《伊索寓言》', url:''},
+  ant:{kind:'寓言', name:'蚂蚁和蚱蜢', field:'《伊索寓言》', says:'夏天蚂蚁搬粮，蚱蜢唱歌；到了冬天，蚱蜢来向蚂蚁讨吃的。前几年舒服的那条路，后几年未必还舒服。', src:'《伊索寓言》', url:''},
+  buridan:{kind:'寓言', name:'布里丹的驴', field:'中世纪哲学寓言，托名布里丹', says:'一头驴站在两堆一模一样的干草中间，哪一堆都没有更好的理由先吃，最后饿死了。两边差不多的时候，不选才是最差的选法。', src:'中世纪哲学寓言，托名布里丹', url:''},
+  zhengren:{kind:'寓言', name:'郑人买履', field:'《韩非子·外储说左上》', says:'郑国人量好脚的尺寸去买鞋，到了集市发现尺码忘在家里，回去取，集市已经散了。问他为什么不用脚试，他说「宁信度，无自信也」。', src:'《韩非子·外储说左上》', url:''},
+  yegong:{kind:'寓言', name:'叶公好龙', field:'刘向《新序·杂事五》', says:'叶公满屋子画龙，真龙来了却吓得掉头就跑。「是叶公非好龙也，好夫似龙而非龙者也。」喜欢的可能是想象里的那条路，不是真走上去的那条。', src:'刘向《新序·杂事五》', url:''},
+  qutu:{kind:'寓言', name:'曲突徙薪', field:'《汉书·霍光传》', says:'客人劝主人把烟囱改弯、把柴草搬开，主人不听，后来果然失火。「曲突徙薪亡恩泽，焦头烂额为上客」，事先防住的灾没人记得，可它最划算。', src:'《汉书·霍光传》', url:''},
+  bearpaw:{kind:'古语', name:'鱼与熊掌', field:'《孟子·告子上》', says:'「鱼，我所欲也；熊掌，亦我所欲也。二者不可得兼，舍鱼而取熊掌者也。」两样只能得一样时，取自己更看重的那样，另一样就认了。', src:'《孟子·告子上》', url:''},
+  yusu:{kind:'古语', name:'欲速则不达', field:'《论语·子路》', says:'「无欲速，无见小利。欲速则不达，见小利则大事不成。」', src:'《论语·子路》', url:''},
+  yuanlv:{kind:'古语', name:'人无远虑，必有近忧', field:'《论语·卫灵公》', says:'「人无远虑，必有近忧。」只看头一两年的人，麻烦会来得更早。', src:'《论语·卫灵公》', url:''},
+  zaisi:{kind:'古语', name:'再，斯可矣', field:'《论语·公冶长》', says:'「季文子三思而后行。子闻之，曰：再，斯可矣。」孔子的意思是想两遍就够了，想太多反而生出私心和犹豫。', src:'《论语·公冶长》', url:''},
+  xiaoburen:{kind:'古语', name:'小不忍则乱大谋', field:'《论语·卫灵公》', says:'「小不忍，则乱大谋。」前面那段难熬的日子熬不过去，后面的打算就都落空。', src:'《论语·卫灵公》', url:''},
+  kuibu:{kind:'古语', name:'不积跬步，无以至千里', field:'《荀子·劝学》', says:'「不积跬步，无以至千里；不积小流，无以成江海。」', src:'《荀子·劝学》', url:''},
+  hebao:{kind:'古语', name:'合抱之木，生于毫末', field:'《老子》第六十四章', says:'「合抱之木，生于毫末；九层之台，起于累土；千里之行，始于足下。」', src:'《老子》第六十四章', url:''},
+  daqi:{kind:'古语', name:'大器晚成', field:'《老子》第四十一章', says:'「大方无隅，大器晚成。」大的东西成得晚。', src:'《老子》第四十一章', url:''},
+  huofu:{kind:'古语', name:'祸兮福之所倚', field:'《老子》第五十八章', says:'「祸兮，福之所倚；福兮，祸之所伏。」坏事里靠着好事，好事里藏着坏事。', src:'《老子》第五十八章', url:''},
+  zhizu44:{kind:'古语', name:'知足不辱，知止不殆', field:'《老子》第四十四章', says:'「知足不辱，知止不殆，可以长久。」知道够了就不会受辱，知道停就不会遇险。', src:'《老子》第四十四章', url:''},
+  zhizu:{kind:'古语', name:'知足者富', field:'《老子》第三十三章', says:'「知足者富。」觉得够了的人，才算富。', src:'《老子》第三十三章', url:''},
+  qiongbian:{kind:'古语', name:'穷则变，变则通', field:'《周易·系辞下》', says:'「穷则变，变则通，通则久。」路走到头就该变，变了才通，通了才长久。', src:'《周易·系辞下》', url:''},
+  youhuan:{kind:'古语', name:'生于忧患，死于安乐', field:'《孟子·告子下》', says:'「然后知生于忧患而死于安乐也。」安稳的地方最容易让人不知不觉地垮掉。', src:'《孟子·告子下》', url:''},
+  yanqiang:{kind:'古语', name:'不立乎岩墙之下', field:'《孟子·尽心上》', says:'「是故知命者不立乎岩墙之下。」明白事理的人不站在快要倒的墙底下。', src:'《孟子·尽心上》', url:''},
+  buwei:{kind:'古语', name:'有不为，而后可以有为', field:'《孟子·离娄下》', says:'「人有不为也，而后可以有为。」先定下哪些不做，才做得成要做的。', src:'《孟子·离娄下》', url:''},
+  jinxinshu:{kind:'古语', name:'尽信书，则不如无书', field:'《孟子·尽心下》', says:'「尽信《书》，则不如无《书》。」什么都照书上的信，还不如没有书。', src:'《孟子·尽心下》', url:''},
+  linyuan:{kind:'古语', name:'临渊羡鱼，不如退而结网', field:'《汉书·董仲舒传》', says:'「临渊羡鱼，不如退而结网。」站在水边眼馋，不如回去织网。', src:'《汉书·董仲舒传》', url:''},
+  hukou:{kind:'古语', name:'不入虎穴，不得虎子', field:'《后汉书·班超传》', says:'「不入虎穴，不得虎子。」想要那个上限，只能进去。', src:'《后汉书·班超传》', url:''},
+  dangduan:{kind:'古语', name:'当断不断，反受其乱', field:'《史记·齐悼惠王世家》', says:'「当断不断，反受其乱。」该定的时候不定，乱子反而落到自己头上。', src:'《史记·齐悼惠王世家》', url:''},
+  quda:{kind:'古语', name:'利之中取大，害之中取小', field:'《墨子·大取》', says:'「利之中取大，害之中取小也。」几样好处里拿大的，几样坏处里挑小的。', src:'《墨子·大取》', url:''},
+  cangling:{kind:'古语', name:'仓廪实则知礼节', field:'《管子·牧民》', says:'「仓廪实则知礼节，衣食足则知荣辱。」先得吃穿不愁，别的才谈得上。', src:'《管子·牧民》', url:''},
+  yidan:{kind:'古语', name:'一箪食，一瓢饮', field:'《论语·雍也》', says:'「一箪食，一瓢饮，在陋巷，人不堪其忧，回也不改其乐。」颜回过得清苦，别人受不了，他的快乐不变。', src:'《论语·雍也》', url:''},
+  dongyu:{kind:'古语', name:'失之东隅，收之桑榆', field:'《后汉书·冯异传》', says:'「失之东隅，收之桑榆。」这头丢掉的，会在那头收回来一些。', src:'《后汉书·冯异传》', url:''},
+  weiyu:{kind:'古语', name:'未雨绸缪', field:'《诗经·豳风·鸱鸮》', says:'「迨天之未阴雨，彻彼桑土，绸缪牖户。」趁天还没下雨，先把门窗缠牢。', src:'《诗经·豳风·鸱鸮》', url:''},
+  qingshan:{kind:'古语', name:'留得青山在，不怕没柴烧', field:'《初刻拍案惊奇》卷二十二', says:'「留得青山在，不怕没柴烧。」底子保住了，就还有下一次。', src:'《初刻拍案惊奇》卷二十二', url:''},
+  shunuo:{kind:'俗语', name:'树挪死，人挪活', field:'民间俗语', says:'树挪了地方容易死，人换个地方反而活得开。', src:'民间俗语', url:''},
+  yidong:{kind:'俗语', name:'一动不如一静', field:'民间俗语', says:'没有把握的时候，动一下不如先不动。', src:'民间俗语', url:''},
+  zheshan:{kind:'俗语', name:'这山望着那山高', field:'民间俗语', says:'站在这座山上，总觉得对面那座更高；真过去了，回头看这座也一样高。', src:'民间俗语', url:''},
+  xianzhong:{kind:'俗语', name:'富贵险中求', field:'民间俗语', says:'大的好处都在有风险的地方。', src:'民间俗语', url:''},
+  modao:{kind:'俗语', name:'磨刀不误砍柴工', field:'民间俗语', says:'花在磨刀上的时间，会在砍柴的时候赚回来。', src:'民间俗语', url:''},
+  wannian:{kind:'俗语', name:'小心驶得万年船', field:'民间俗语', says:'慢一点、稳一点的船，开得最久。', src:'民间俗语', url:''}
+};
+const MONEY = /收入|薪|工资|钱|存款|宽裕|pay|income|salary|wealth|money/i, FEEL = /满意|心态|幸福|快乐|心情|舒心|mood|wellbeing|happy|satisf/i;
+function meterKind(m){ const t = m.id + ' ' + m.name; return MONEY.test(t) ? 'money' : FEEL.test(t) ? 'feel' : 'other'; }
+// 一千对里 A 更高的比例、谁领先。不到 58% 算分不出。
+function leadOf(runs, id){ const n = Math.min(runs.A.length, runs.B.length); let w = 0;
+  for(let i=0;i<n;i++){ const a = runs.A[i].final[id], b = runs.B[i].final[id]; w += a>b ? 1 : a===b ? 0.5 : 0; }
+  const pA = w/n, pct = Math.round(Math.max(pA, 1-pA)*100); return {pA, pct, lead: pct < 58 ? null : (pA >= 0.5 ? 'A' : 'B')}; }
+// 按玩家最看重的那一项 focusId 下判断。先从模拟结果里读出若干「论点」（比如：最差的一成里谁更输不掉），
+// 每个论点偏向一条路或只是提醒，下面挂着支持它的道理（for）和说法相反的道理（counter）。偏向按论点数比，不按道理条数比。
+function judge(pack, runs, focusId, mine){
+  const m = pack.meters.find(x => x.id === focusId) || pack.meters[0], id = m.id, kind = meterKind(m), nm = k => '「' + pack.options[k].name + '」', other = k => k === 'A' ? 'B' : 'A';
+  const L = {}; pack.meters.forEach(x => L[x.id] = leadOf(runs, x.id)); const F = L[id], st = pack.stance || {}, points = [];
+  const q = (k, p) => quant(runs[k].map(r => r.final[id]).sort((a,b) => a-b), p);
+  const pick = keys => keys.filter(k => DAOLI[k]).map(k => Object.assign({id:k, kind:'研究'}, DAOLI[k]));
+  const add = (key, side, text, fr, counter, weight) => points.push({id:key, side, text, weight: side ? (weight || 1) : 0, items: pick(fr), counter: pick(counter || [])});
+  const saw = mine && mine.A !== mine.B ? (mine.A > mine.B ? 'A' : 'B') : null;
+  const lo = {A:q('A',0.1), B:q('B',0.1)}, mid = {A:q('A',0.5), B:q('B',0.5)}, hi = {A:q('A',0.9), B:q('B',0.9)}, gapThr = Math.max(2, 0.04*Math.max(mid.A, mid.B));
+  const hiDrift = m.drift.A === m.drift.B ? null : (m.drift.A > m.drift.B ? 'A' : 'B'), hiStart = m.start.A === m.start.B ? null : (m.start.A > m.start.B ? 'A' : 'B');
+  const against = pack.meters.filter(x => x.id !== id && L[x.id].lead && F.lead && L[x.id].lead !== F.lead);
+  const close = pack.meters.filter(x => !L[x.id].lead).length;
+  // 胜算
+  if(F.lead) add('lead', F.lead, '一千对你里，' + nm(F.lead) + '的' + m.name + '更高的占 ' + F.pct + '%。胜算在它这边。', F.pct >= 80 ? ['outside','suan','xiansheng'] : ['outside','suan'], F.pct < 75 ? ['wuchang'] : []);
+  else add('nolead', null, '一千对你里两条路各赢一半左右（' + F.pct + '%）。在' + m.name + '上，算不出谁的胜算多。', ['outside','suan']);
+  // 你走的那一遍和大盘相反
+  if(saw && F.lead && saw !== F.lead) add('onerun', null, '你亲身走的那一遍里' + nm(saw) + '更高，和一千遍的多数相反。那一遍是结果，不是选择的好坏。', ['outcome','guanzhong','mangren','beigong']);
+  // 一遍定不了论
+  if(F.pct < 75) add('flip', null, '在' + m.name + '上，只看一遍就下结论，有 ' + (100 - F.pct) + '% 的可能看反。', ['saiweng','huofu','wuchang']);
+  // 钱按倍数算
+  if(kind === 'money'){ const g = k => { let t = 0; runs[k].forEach(r => t += Math.log(Math.max(1, r.final[id]))); return t/runs[k].length; }, d = g('A') - g('B');
+    if(Math.abs(d) >= 0.04){ const k = d > 0 ? 'A' : 'B'; add('logmoney', k, '钱要按倍数比。折算后' + nm(k) + '平均高出约 ' + Math.round((Math.exp(Math.abs(d))-1)*100) + '%。' + (F.lead && F.lead !== k ? '它赢的次数少，但输的时候输得浅。' : ''), ['logmoney']); }
+    else add('logmoney', null, '钱要按倍数比。折算后两条路的' + m.name + '差不到 4%，带不来多少感受上的不同。', ['logmoney','zhizu']); }
+  // 输不掉
+  if(Math.abs(lo.A - lo.B) >= gapThr){ const k = lo.A > lo.B ? 'A' : 'B'; add('floor', k, '运气最差的那一成里，' + nm(k) + '的' + m.name + '是 ' + lo[k] + '，' + nm(other(k)) + '是 ' + lo[other(k)] + '。' + nm(k) + '更输不掉。', ['floor','bubai','yanqiang','weiyu','qutu','qingshan','wannian'], ['hukou','xianzhong']); }
+  // 领先的那条下行更深：害怕会被放大
+  if(F.lead && lo[F.lead] < lo[other(F.lead)] - gapThr) add('loss', null, nm(F.lead) + '多数时候更高，可最差时会落到 ' + lo[F.lead] + '。人对这种下行的害怕是放大过的：先问自己落到那里扛不扛得住，扛得住就别让害怕替你选。', ['loss','hukou','xianzhong'], ['yanqiang']);
+  // 只赢在好运上
+  ['A','B'].forEach(k => { const o = other(k); if(hi[k] - hi[o] >= gapThr && mid[o] - mid[k] >= gapThr) add('tail', o, nm(k) + '最好的一成能到 ' + hi[k] + '，高过' + nm(o) + '的 ' + hi[o] + '；可寻常年景它是 ' + mid[k] + '，低于' + nm(o) + '的 ' + mid[o] + '。它赢在少数的好运上。', ['stump','milkmaid','huabing','dogshadow'], ['hukou']); });
+  // 钱和心情指向两边
+  const money = pack.meters.find(x => meterKind(x) === 'money'), feel = pack.meters.find(x => meterKind(x) === 'feel');
+  if(money && feel && L[money.id].lead && L[feel.id].lead && L[money.id].lead !== L[feel.id].lead){ const fk = L[feel.id].lead, mk = L[money.id].lead;
+    if(kind === 'feel') add('feelmoney', fk, nm(mk) + '钱更多，' + nm(fk) + '的' + feel.name + '更好。你看重的这一项，是钱换不来的那部分。', ['feelmoney','yidan','zhizu','zhizu44'], ['cangling']);
+    else add('feelmoney', null, nm(mk) + '钱更多，' + nm(fk) + '的' + feel.name + '更好。多出来的钱抬高的是「我过得不错」的评价，每天舒不舒心另算。', ['feelmoney','zhizu44','yidan'], ['cangling']); }
+  // 变还是不变
+  if(st.change === 'A' || st.change === 'B'){ const c = st.change, s0 = other(c);
+    if(F.lead === c) add('heli', c, nm(c) + '是改变现状的那条，而它在' + m.name + '上占优。动了有好处，就该动。', ['heli','shunuo','linyuan'], ['yidong']);
+    else if(F.lead === s0) add('heli', s0, nm(c) + '是改变现状的那条，可在' + m.name + '上占优的是不动的' + nm(s0) + '。动了没有好处，就不动。', ['heli','yidong','zheshan'], ['shunuo','jingdi']);
+    else add('coin', c, '在' + m.name + '上两条路接近，正是拿不定的情形。实验里，这种时候做了改变的人半年后更快乐。' + nm(c) + '是改变的那条。', ['coin','shunuo','linyuan'], ['heli','yidong','zheshan']);
+    add('regret', c, nm(c) + '是「去做」的那条，' + nm(s0) + '是「不做」的那条。长期看，人更后悔没做的事。这条研究的重复实验效应偏弱，只算半个论点。', ['regret','jingdi'], ['yegong'], 0.5);
+    if(mid[s0] < m.start[s0] - gapThr) add('decline', c, '不动的话，' + nm(s0) + '的' + m.name + '寻常年景会从 ' + Math.round(m.start[s0]) + ' 落到 ' + mid[s0] + '。原地在往下走。', ['qiongbian','zouwei','kezhou','youhuan']); }
+  // 别的指标在另一边
+  if(against.length){
+    add('trade', F.lead, '你要的是' + m.name + '，它在' + nm(F.lead) + '这边；' + against.map(x => x.name).join('、') + '在另一边。两样不能都要，按你自己说的，取' + m.name + '。', ['bearpaw','buwei','quda','jiubian'], ['dongyu']);
+    add('focus', null, '可也别只盯着' + m.name + '。比较两种生活时，最显眼的那个差别会被看得过重，真过起来分量没那么大。', ['focus','maidu']); }
+  // 比的是心情
+  if(kind === 'feel' && F.lead) add('impact', null, '这里比的是' + m.name + '。人会高估一件事对情绪的影响有多强、多久，现实里两条路的差距多半比模拟的小。', ['impact']);
+  // 先甜后甜
+  if(hiDrift && hiStart && hiDrift !== hiStart) add('slowfast', F.lead === hiDrift ? hiDrift : null, nm(hiStart) + '起点高，' + nm(hiDrift) + '每年涨得多。' + (F.lead === hiDrift ? pack.years + ' 年下来，涨得多的那条已经追过去了。' : pack.years + ' 年里还没追上；年头再长，会更接近。'), ['tortoise','kuibu','hebao','yugong','daqi','modao','xiaoburen','yusu','bamiao']);
+  const yr1 = k => { let t = 0; runs[k].forEach(r => t += r.years[0].val[id]); return t/runs[k].length; }, e = yr1('A') - yr1('B');
+  if(F.lead && Math.abs(e) >= gapThr && (e > 0 ? 'A' : 'B') !== F.lead) add('longrun', F.lead, '第一年是' + nm(other(F.lead)) + '的' + m.name + '更高，到第 ' + pack.years + ' 年是' + nm(F.lead) + '更高。只看头一年会选反。', ['yuanlv','goose','ant','yusu']);
+  if(!F.lead && hiStart && Math.abs(m.start.A - m.start.B) >= gapThr) add('samesum', null, nm(hiStart) + '一开始的' + m.name + '更高，可 ' + pack.years + ' 年后两条路分不出高下。差的只是先甜还是后甜。', ['threefour']);
+  // 难回头
+  if(st.lock === 'A' || st.lock === 'B'){ const k = st.lock, o = other(k);
+    add('mend', o, nm(o) + '走错了还能改，' + nm(k) + '难回头。能补救的那条，错的代价有上限。', ['mend','jiaotu'], ['deadground','pofu','revers']);
+    add('commit', null, '但别因为' + nm(k) + '没有退路就给它扣太多分。断了退路的人会把力气都用上，事后也更容易对自己的选择满意。', ['revers','deadground','pofu','foxgrapes']); }
+  // 差不多就定
+  if(close * 2 >= pack.meters.length) add('close', null, pack.meters.length + ' 项里有 ' + close + ' 项两条路分不出高下。再比也比不出最优，拖着本身有代价。', ['maxim','swift','dangduan','zaisi','buridan']);
+  // 模拟不认识你
+  add('self', null, '这些数字知道两条路大概什么样，不知道你是谁、输不输得起。它们是纸面上的推演。和你自己的感受对不上时，别急着信数字。', ['zhibi','zhengren','jinxinshu','zhishang']);
+  const score = {A:0, B:0}; points.forEach(p => { if(p.side) score[p.side] += p.weight; });
+  const side = Math.abs(score.A - score.B) < 0.75 ? null : (score.A > score.B ? 'A' : 'B');
+  return {focus:id, side, score, lead:L, points};
+}
+// 道理账：把每条规律单独拿掉重跑，看它把两条路的差距（A 减 B）往哪边推了多少。正数是往 A 推。
+// 起点和年增长、没挂规律的事件，都记成「设定」，和有出处的规律分开算。
+function argue(pack, n){
+  n = n || 300;
+  const gap = p => { const o = {}, rs = {A: batch(p,'A',n,70001), B: batch(p,'B',n,70002)};
+    p.meters.forEach(m => { let a = 0, b = 0; for(let i=0;i<n;i++){ a += rs.A[i].final[m.id]; b += rs.B[i].final[m.id]; } o[m.id] = (a-b)/n; }); return o; };
+  const without = hit => Object.assign({}, pack, {
+    events: pack.events.map(e => hit(e.rule) ? Object.assign({}, e, {p:{A:0,B:0}}) : e),
+    choices: pack.choices.map(c => Object.assign({}, c, {options: c.options.map(o => hit(o.rule) ? Object.assign({}, o, {effects:{}}) : o)}))});
+  const base = gap(pack), items = [];
+  const tiltOf = g => { const t = {}; pack.meters.forEach(m => t[m.id] = base[m.id] - g[m.id]); return t; };
+  const used = new Set(); pack.events.forEach(e => used.add(e.rule)); pack.choices.forEach(c => c.options.forEach(o => { if(Object.keys(o.effects).length) used.add(o.rule); }));
+  Object.keys(pack.rules).forEach(id => { const r = pack.rules[id]; if(r.tier === 'analogy' || !used.has(id)) return;
+    items.push({id, tier: r.tier, tilt: tiltOf(gap(without(x => x === id)))}); });
+  if(used.has(null)) items.push({id:'_none', tier:'assume', tilt: tiltOf(gap(without(x => x === null)))});
+  items.push({id:'_base', tier:'assume', tilt: gap(without(() => true))});
+  return {base, items};
+}
 
 // 《岔路》的拼装器。照《八十亿分之一》按国家查表的办法：规则挂在属性上，不挂在题目上。
 // 一条路 = 六个维度各取一个值。两条路一配，规则自己装配成一个岔路。
@@ -931,6 +1138,7 @@ function buildPrompt(q){
                 {"label": "...", "text": "...", "sets": "", "tone": "flat", "rule": "", "effects": {}}]}
  ],
  "closing": {"A": "走完 A 路时亮出的那条类比规律的 id", "B": "..."},
+ "stance": {"change": "A|B|none，哪条路是改变现状、去做一件新的事；两条都是或都不是填 none", "lock": "A|B|none，哪条路走了之后明显更难回头；说不准填 none"},
  "caveat": "这次模拟最可能漏掉或算错的东西，一句话，要具体"
 }
 
@@ -1256,10 +1464,62 @@ function renderReveal(animate){
     return '<div class="law '+(G.deck.has(id)?'':'miss')+'"><div><span class="tier '+r.tier+'">'+TIER[r.tier]+'</span><span class="f">'+esc(r.field)+'</span></div><h3>'+esc(r.name)+'</h3><div>'+esc(r.says)+'</div>'+
       (r.url?'<a class="small" href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.src)+'</a>':'<span class="small muted">'+esc(r.src)+'</span>')+'</div>'; }).join('');
   $('cav').textContent = p.caveat ? '这次模拟最可能算错的地方：'+p.caveat : '';
+  clearTimeout(G.argT);
+  if(animate){ G.arg = argue(p); renderArgue(); } else G.argT = setTimeout(() => { G.arg = argue(G.pack); renderArgue(); }, 250);
   if(animate) renderKnobs();
   draw(animate && !calm);
   const tj = r => [r.start[R.m0]].concat(r.years.map(y => y.val[R.m0]));
   Stage.reveal(R.runs.A.slice(0,320).map(tj), R.runs.B.slice(0,320).map(tj), animate);
+}
+/* ---------- 道理账：哪条路在哪件事上占优、依据是什么、把握多大 ---------- */
+function weigh(mm){
+  const R = G.R, id = mm.id; let w = 0;
+  for(let i=0;i<1000;i++){ const a = R.runs.A[i].final[id], b = R.runs.B[i].final[id]; w += a>b ? 1 : a===b ? 0.5 : 0; }
+  const pA = w/1000, lead = pA >= 0.5 ? 'A' : 'B', pct = Math.round(Math.max(pA, 1-pA)*100), thr = Math.max(R.scale[id]*0.015, 0.5);
+  const sum = {ev:0, un:0, as:0}, abs = {ev:0, un:0, as:0};
+  G.arg.items.forEach(it => { const t = it.tilt[id] || 0, g = (it.tier==='study'||it.tier==='stat') ? 'ev' : it.tier==='unverified' ? 'un' : 'as'; sum[g] += t; abs[g] += Math.abs(t); });
+  const tot = abs.ev + abs.un + abs.as, share = tot ? abs.ev/tot : 0, evDir = Math.abs(sum.ev) >= thr ? (sum.ev > 0 ? 'A' : 'B') : null;
+  let lv, cls, note;
+  if(pct < 58){ lv = '分不出'; cls = 'lo'; note = '一千遍里两条路在这件事上差不多，道理没有明显偏向谁。'; }
+  else if(evDir === lead && share >= 0.5 && pct >= 70){ lv = '把握高'; cls = 'hi'; note = '有出处的规律和一千遍的结果指向同一边，差距里大半是研究撑着的。'; }
+  else if(evDir === lead && share >= 0.25){ lv = '把握中'; cls = 'mid'; note = '有出处的规律指向这一边，但差距里有不少来自设定。'; }
+  else if(evDir && evDir !== lead){ lv = '把握低'; cls = 'lo'; note = '一千遍里它领先，可有出处的规律偏向另一边。这个领先是设定撑起来的，别太当真。'; }
+  else { lv = '把握低'; cls = 'lo'; note = '一千遍里它领先，但撑着它的主要是设定，不是研究。'; }
+  return {lead: pct < 58 ? null : lead, pct, lv, cls, note, sum, thr, evDir};
+}
+function renderArgue(){
+  const p = G.pack, nm = k => '<span class="side'+k+'">「'+esc(p.options[k].name)+'」</span>';
+  if(!G.arg || !$('argue')) return;
+  if(!p.meters.some(m => m.id === G.focus)) G.focus = p.meters[0].id;
+  const mineOf = id => ({A: Math.round(G.L.A.val[id]), B: Math.round(G.L.B.val[id])});
+  const W = {}, J = {}; p.meters.forEach(m => { W[m.id] = weigh(m); J[m.id] = judge(p, G.R.runs, m.id, mineOf(m.id)); });
+  const stand = j => j.side ? '道理站在'+nm(j.side)+'这边' : '道理分不出高下';
+  $('argsum').innerHTML = '<div class="argsum">'+p.meters.map(m => '<div>最看重'+esc(m.name)+'的话：'+stand(J[m.id])+'<span class="lv '+W[m.id].cls+'">数字'+W[m.id].lv+'</span></div>').join('')+'</div>';
+  $('argpick').innerHTML = p.meters.map(m => '<button data-m="'+esc(m.id)+'" class="'+(m.id===G.focus?'on':'')+'" aria-pressed="'+(m.id===G.focus)+'">'+esc(m.name)+'</button>').join('');
+  $('argpick').querySelectorAll('button').forEach(b => b.onclick = () => { G.focus = b.dataset.m; blip(520,.08); renderArgue(); });
+  const m = p.meters.find(x => x.id === G.focus), w = W[m.id], j = J[m.id], num = v => Math.abs(v) >= 10 ? Math.round(Math.abs(v)) : Math.round(Math.abs(v)*10)/10;
+  const cnt = k => j.points.filter(pt => pt.side === k).length, warn = j.points.filter(pt => !pt.side).length;
+  const tally = ['A','B'].filter(k => cnt(k)).map(k => cnt(k)+' 个偏向'+nm(k)).join('，') + (warn ? (cnt('A')+cnt('B') ? '，' : '') + warn+' 个是提醒' : '');
+  const usedIds = new Set(); j.points.forEach(pt => pt.items.concat(pt.counter).forEach(it => usedIds.add(it.id)));
+  const one = it => '<span class="dl"><span class="tier '+(it.kind==='研究'?'study':'analogy')+'">'+esc(it.kind)+'</span><b>'+esc(it.name)+'</b>（'+esc(it.field)+'）：'+esc(it.says)+(it.url ? ' <a href="'+esc(it.url)+'" target="_blank" rel="noopener">'+esc(it.src)+'</a>' : '')+'</span>';
+  const daoli = j.points.map(pt => { const first = pt.items.slice(0,2), more = pt.items.slice(2);
+    return '<div class="argrow"><span class="push">'+(pt.side ? '偏向'+nm(pt.side) : '<span class="muted">提醒</span>')+'</span><span class="txt"><span class="apply">'+esc(pt.text)+'</span>'+first.map(one).join('')+
+      (more.length ? '<details class="more"><summary>同理的还有 '+more.length+' 条：'+more.map(it => esc(it.name)).join('、')+'</summary>'+more.map(one).join('')+'</details>' : '')+
+      (pt.counter.length ? '<details class="more"><summary>也有反过来的说法：'+pt.counter.map(it => esc(it.name)).join('、')+'</summary>'+pt.counter.map(one).join('')+'</details>' : '')+'</span></div>'; }).join('');
+  const push = v => Math.abs(v) < w.thr ? '<span class="muted">几乎不动</span>' : '往'+nm(v>0?'A':'B')+'推 '+num(v);
+  const meta = it => it.id === '_base' ? {name:'起点和每年的自然变化', txt:'两条路的起始数值和年增长是设定的，没有研究出处。', link:''}
+    : it.id === '_none' ? {name:'没挂规律的事件', txt:'这些事件没有对应的规律，概率和影响都是设定。', link:''}
+    : (r => ({name:r.name, txt:r.why || r.says, link:r.url ? ' <a href="'+esc(r.url)+'" target="_blank" rel="noopener">出处</a>' : ''}))(p.rules[it.id]);
+  const rows = G.arg.items.filter(it => Math.abs(it.tilt[m.id] || 0) >= w.thr).sort((x,y) => Math.abs(y.tilt[m.id]) - Math.abs(x.tilt[m.id])).slice(0, 7);
+  const open = $('ledger') && $('ledger').open;
+  $('argue').innerHTML = '<div class="argcard"><div class="head">如果你最看重'+esc(m.name)+'：'+stand(j)+'</div>'+
+    '<div class="small">从这一局读出 '+j.points.length+' 个论点：'+tally+'。偏向按论点数比。它们背后用到道理库 '+Object.keys(DAOLI).length+' 条里的 '+usedIds.size+' 条。</div>'+daoli+
+    '<details id="ledger"'+(open?' open':'')+'><summary>这些数字有多硬：'+w.lv+'。看规律账</summary>'+
+    '<div class="small" style="margin:10px 0 4px">'+w.note+' 下面是把每条规律单独拿掉重跑后，它把两条路在'+esc(m.name)+'上的差距往哪边推了多少。</div>'+
+    (rows.length ? rows.map(it => { const t = it.tilt[m.id], d = meta(it);
+      return '<div class="argrow"><span class="push">'+push(t)+'</span><span class="txt"><span class="tier '+it.tier+'">'+TIER[it.tier]+'</span><b>'+esc(d.name)+'</b>：'+esc(d.txt)+d.link+'</span></div>'; }).join('')
+      : '<div class="small muted">没有哪条规律在这件事上明显推了一把。</div>')+
+    '<div class="small muted" style="border-top:1px solid var(--line);padding-top:8px">合计：有出处的规律'+push(w.sum.ev)+'；未核实的'+push(w.sum.un)+'；设定'+push(w.sum.as)+'。各项之间有交叉，加起来不一定正好等于总差距。</div></details></div>';
 }
 function renderKnobs(){
   const p = G.pack, ks = p.events.filter(e => e.knob).slice(0,4), list = ks.length ? ks : p.events.slice(0,3);

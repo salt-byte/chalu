@@ -196,10 +196,62 @@ function renderReveal(animate){
     return '<div class="law '+(G.deck.has(id)?'':'miss')+'"><div><span class="tier '+r.tier+'">'+TIER[r.tier]+'</span><span class="f">'+esc(r.field)+'</span></div><h3>'+esc(r.name)+'</h3><div>'+esc(r.says)+'</div>'+
       (r.url?'<a class="small" href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.src)+'</a>':'<span class="small muted">'+esc(r.src)+'</span>')+'</div>'; }).join('');
   $('cav').textContent = p.caveat ? '这次模拟最可能算错的地方：'+p.caveat : '';
+  clearTimeout(G.argT);
+  if(animate){ G.arg = argue(p); renderArgue(); } else G.argT = setTimeout(() => { G.arg = argue(G.pack); renderArgue(); }, 250);
   if(animate) renderKnobs();
   draw(animate && !calm);
   const tj = r => [r.start[R.m0]].concat(r.years.map(y => y.val[R.m0]));
   Stage.reveal(R.runs.A.slice(0,320).map(tj), R.runs.B.slice(0,320).map(tj), animate);
+}
+/* ---------- 道理账：哪条路在哪件事上占优、依据是什么、把握多大 ---------- */
+function weigh(mm){
+  const R = G.R, id = mm.id; let w = 0;
+  for(let i=0;i<1000;i++){ const a = R.runs.A[i].final[id], b = R.runs.B[i].final[id]; w += a>b ? 1 : a===b ? 0.5 : 0; }
+  const pA = w/1000, lead = pA >= 0.5 ? 'A' : 'B', pct = Math.round(Math.max(pA, 1-pA)*100), thr = Math.max(R.scale[id]*0.015, 0.5);
+  const sum = {ev:0, un:0, as:0}, abs = {ev:0, un:0, as:0};
+  G.arg.items.forEach(it => { const t = it.tilt[id] || 0, g = (it.tier==='study'||it.tier==='stat') ? 'ev' : it.tier==='unverified' ? 'un' : 'as'; sum[g] += t; abs[g] += Math.abs(t); });
+  const tot = abs.ev + abs.un + abs.as, share = tot ? abs.ev/tot : 0, evDir = Math.abs(sum.ev) >= thr ? (sum.ev > 0 ? 'A' : 'B') : null;
+  let lv, cls, note;
+  if(pct < 58){ lv = '分不出'; cls = 'lo'; note = '一千遍里两条路在这件事上差不多，道理没有明显偏向谁。'; }
+  else if(evDir === lead && share >= 0.5 && pct >= 70){ lv = '把握高'; cls = 'hi'; note = '有出处的规律和一千遍的结果指向同一边，差距里大半是研究撑着的。'; }
+  else if(evDir === lead && share >= 0.25){ lv = '把握中'; cls = 'mid'; note = '有出处的规律指向这一边，但差距里有不少来自设定。'; }
+  else if(evDir && evDir !== lead){ lv = '把握低'; cls = 'lo'; note = '一千遍里它领先，可有出处的规律偏向另一边。这个领先是设定撑起来的，别太当真。'; }
+  else { lv = '把握低'; cls = 'lo'; note = '一千遍里它领先，但撑着它的主要是设定，不是研究。'; }
+  return {lead: pct < 58 ? null : lead, pct, lv, cls, note, sum, thr, evDir};
+}
+function renderArgue(){
+  const p = G.pack, nm = k => '<span class="side'+k+'">「'+esc(p.options[k].name)+'」</span>';
+  if(!G.arg || !$('argue')) return;
+  if(!p.meters.some(m => m.id === G.focus)) G.focus = p.meters[0].id;
+  const mineOf = id => ({A: Math.round(G.L.A.val[id]), B: Math.round(G.L.B.val[id])});
+  const W = {}, J = {}; p.meters.forEach(m => { W[m.id] = weigh(m); J[m.id] = judge(p, G.R.runs, m.id, mineOf(m.id)); });
+  const stand = j => j.side ? '道理站在'+nm(j.side)+'这边' : '道理分不出高下';
+  $('argsum').innerHTML = '<div class="argsum">'+p.meters.map(m => '<div>最看重'+esc(m.name)+'的话：'+stand(J[m.id])+'<span class="lv '+W[m.id].cls+'">数字'+W[m.id].lv+'</span></div>').join('')+'</div>';
+  $('argpick').innerHTML = p.meters.map(m => '<button data-m="'+esc(m.id)+'" class="'+(m.id===G.focus?'on':'')+'" aria-pressed="'+(m.id===G.focus)+'">'+esc(m.name)+'</button>').join('');
+  $('argpick').querySelectorAll('button').forEach(b => b.onclick = () => { G.focus = b.dataset.m; blip(520,.08); renderArgue(); });
+  const m = p.meters.find(x => x.id === G.focus), w = W[m.id], j = J[m.id], num = v => Math.abs(v) >= 10 ? Math.round(Math.abs(v)) : Math.round(Math.abs(v)*10)/10;
+  const cnt = k => j.points.filter(pt => pt.side === k).length, warn = j.points.filter(pt => !pt.side).length;
+  const tally = ['A','B'].filter(k => cnt(k)).map(k => cnt(k)+' 个偏向'+nm(k)).join('，') + (warn ? (cnt('A')+cnt('B') ? '，' : '') + warn+' 个是提醒' : '');
+  const usedIds = new Set(); j.points.forEach(pt => pt.items.concat(pt.counter).forEach(it => usedIds.add(it.id)));
+  const one = it => '<span class="dl"><span class="tier '+(it.kind==='研究'?'study':'analogy')+'">'+esc(it.kind)+'</span><b>'+esc(it.name)+'</b>（'+esc(it.field)+'）：'+esc(it.says)+(it.url ? ' <a href="'+esc(it.url)+'" target="_blank" rel="noopener">'+esc(it.src)+'</a>' : '')+'</span>';
+  const daoli = j.points.map(pt => { const first = pt.items.slice(0,2), more = pt.items.slice(2);
+    return '<div class="argrow"><span class="push">'+(pt.side ? '偏向'+nm(pt.side) : '<span class="muted">提醒</span>')+'</span><span class="txt"><span class="apply">'+esc(pt.text)+'</span>'+first.map(one).join('')+
+      (more.length ? '<details class="more"><summary>同理的还有 '+more.length+' 条：'+more.map(it => esc(it.name)).join('、')+'</summary>'+more.map(one).join('')+'</details>' : '')+
+      (pt.counter.length ? '<details class="more"><summary>也有反过来的说法：'+pt.counter.map(it => esc(it.name)).join('、')+'</summary>'+pt.counter.map(one).join('')+'</details>' : '')+'</span></div>'; }).join('');
+  const push = v => Math.abs(v) < w.thr ? '<span class="muted">几乎不动</span>' : '往'+nm(v>0?'A':'B')+'推 '+num(v);
+  const meta = it => it.id === '_base' ? {name:'起点和每年的自然变化', txt:'两条路的起始数值和年增长是设定的，没有研究出处。', link:''}
+    : it.id === '_none' ? {name:'没挂规律的事件', txt:'这些事件没有对应的规律，概率和影响都是设定。', link:''}
+    : (r => ({name:r.name, txt:r.why || r.says, link:r.url ? ' <a href="'+esc(r.url)+'" target="_blank" rel="noopener">出处</a>' : ''}))(p.rules[it.id]);
+  const rows = G.arg.items.filter(it => Math.abs(it.tilt[m.id] || 0) >= w.thr).sort((x,y) => Math.abs(y.tilt[m.id]) - Math.abs(x.tilt[m.id])).slice(0, 7);
+  const open = $('ledger') && $('ledger').open;
+  $('argue').innerHTML = '<div class="argcard"><div class="head">如果你最看重'+esc(m.name)+'：'+stand(j)+'</div>'+
+    '<div class="small">从这一局读出 '+j.points.length+' 个论点：'+tally+'。偏向按论点数比。它们背后用到道理库 '+Object.keys(DAOLI).length+' 条里的 '+usedIds.size+' 条。</div>'+daoli+
+    '<details id="ledger"'+(open?' open':'')+'><summary>这些数字有多硬：'+w.lv+'。看规律账</summary>'+
+    '<div class="small" style="margin:10px 0 4px">'+w.note+' 下面是把每条规律单独拿掉重跑后，它把两条路在'+esc(m.name)+'上的差距往哪边推了多少。</div>'+
+    (rows.length ? rows.map(it => { const t = it.tilt[m.id], d = meta(it);
+      return '<div class="argrow"><span class="push">'+push(t)+'</span><span class="txt"><span class="tier '+it.tier+'">'+TIER[it.tier]+'</span><b>'+esc(d.name)+'</b>：'+esc(d.txt)+d.link+'</span></div>'; }).join('')
+      : '<div class="small muted">没有哪条规律在这件事上明显推了一把。</div>')+
+    '<div class="small muted" style="border-top:1px solid var(--line);padding-top:8px">合计：有出处的规律'+push(w.sum.ev)+'；未核实的'+push(w.sum.un)+'；设定'+push(w.sum.as)+'。各项之间有交叉，加起来不一定正好等于总差距。</div></details></div>';
 }
 function renderKnobs(){
   const p = G.pack, ks = p.events.filter(e => e.knob).slice(0,4), list = ks.length ? ks : p.events.slice(0,3);

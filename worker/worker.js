@@ -18,7 +18,10 @@ const LIB = {
   gradmh:{name:'博士生的心理负担',field:'公共卫生',says:'美国八所顶尖经济学博士项目里，约四分之一的学生有中度以上的抑郁或焦虑症状，是普通人群的两倍多，读到六年级以上升到三分之一以上。',src:'Bolotnyy 等，Journal of Economic Literature，2022',url:'https://consensus.app/papers/details/w:2207a179-a461-4f02-9a63-0caed4942350/?utm_source=claude_desktop'},
   public:{name:'体制内的满意度',field:'公共管理',says:'欧洲 19 国的调查：公共部门员工的工作满意度高于私营部门，在「担心丢工作」的人越多的国家，这个差距越大。',src:'Fernández Puente、Sánchez-Sánchez，SAGE Open，2021',url:'https://consensus.app/papers/details/w:496b9423-5f41-426a-b26a-398dc23ff533/?utm_source=claude_desktop'},
   ldr:{name:'异地恋的理想化',field:'传播学',says:'异地的情侣比同城的更稳定，因为见得少，彼此被理想化了。但一旦搬到一起，分手的反而更多；分开越久、理想化越重的，搬到一起后越不稳。',src:'Stafford、Merolla，Journal of Social and Personal Relationships，2007',url:'https://consensus.app/papers/details/w:e4499105-e68d-49e0-89f1-64aa97158889/?utm_source=claude_desktop'},
-  bflp:{name:'大鱼小池塘',field:'教育心理学',tier:'analogy',says:'能力相同的学生，在平均水平更高的学校里对自己的评价更低。127 万名学生的汇总效应为 −0.28。证据来自学校，用到别处是类比。',src:'Fang 等，Frontiers in Psychology，元分析',url:'https://consensus.app/papers/details/w:c6956f5a-c7dc-4eeb-9741-f20f5615cffe/?utm_source=claude_desktop'}
+  bflp:{name:'大鱼小池塘',field:'教育心理学',tier:'analogy',says:'能力相同的学生，在平均水平更高的学校里对自己的评价更低。127 万名学生的汇总效应为 −0.28。证据来自学校，用到别处是类比。',src:'Fang 等，Frontiers in Psychology，元分析',url:'https://consensus.app/papers/details/w:c6956f5a-c7dc-4eeb-9741-f20f5615cffe/?utm_source=claude_desktop'},
+  adapt:{name:'对人生大事的适应',field:'幸福感研究',says:'德国二十年的追踪数据：结婚、离婚、丧偶、生孩子、被裁之后，生活满意度会在几年内回到原来的水平。失业是例外，男性对失业几乎适应不了。',src:'Clark、Diener 等，Economic Journal，2008，德国追踪数据',url:'https://consensus.app/papers/details/3092e76988c35711b9c12311646bd95c/?utm_source=claude_desktop'},
+  bigcity:{name:'大城市的经验更值钱',field:'城市经济学',says:'在大城市工作的人一来就有工资溢价，而且每年积累的经验更值钱，收入涨得更快。这部分经验的价值在搬走之后仍然留着。',src:'De la Roca、Puga，Review of Economic Studies，2016，西班牙行政数据',url:'https://consensus.app/papers/details/4d60a2adda6a53a3bed0f1d5530f782e/?utm_source=claude_desktop'},
+  selfemp:{name:'单干的收入代价',field:'劳动经济学',says:'多数自雇者的起步收入和收入增长都低于受雇，干满十年的人收入中位数比受雇低约 35%。他们仍然留下来，说明自己做主这类非金钱回报很大。',src:'Hamilton，Journal of Political Economy，2000',url:'https://consensus.app/papers/details/0ed2c3af8eb25ab3b7a2bed1ff9dd892/?utm_source=claude_desktop'}
 };
 // 拆题的提示词。服务端和「自带密钥」的本机试玩共用这一份。
 function buildPrompt(q){
@@ -55,6 +58,7 @@ function buildPrompt(q){
                 {"label": "...", "text": "...", "sets": "", "tone": "flat", "rule": "", "effects": {}}]}
  ],
  "closing": {"A": "走完 A 路时亮出的那条类比规律的 id", "B": "..."},
+ "stance": {"change": "A|B|none，哪条路是改变现状、去做一件新的事；两条都是或都不是填 none", "lock": "A|B|none，哪条路走了之后明显更难回头；说不准填 none"},
  "caveat": "这次模拟最可能漏掉或算错的东西，一句话，要具体"
 }
 
